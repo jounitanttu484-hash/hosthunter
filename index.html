@@ -3,52 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HostHunter - Web-hotellien Vertailu 2026</title>
+    <title>HostHunter - Top 50 Ulkomaiset Web-hotellit</title>
     
     <style>
         /* --- PERUSTYYLIT --- */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f4f6f9; color: #333; }
         .container { max-width: 1400px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
         
-        /* HEADER */
         .header-wrapper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; flex-wrap: wrap; gap: 20px; }
         .header-content { flex-grow: 1; }
         h1 { color: #2c3e50; margin: 0; font-size: 2.5em; }
         .logo-accent { color: #3498db; }
         .subtitle { color: #7f8c8d; font-size: 1.1em; }
 
-        /* HAKUKENTTÄ (UUSI) */
+        /* HAKUKENTTÄ & BADGE */
         .search-box {
-            width: 100%;
-            max-width: 400px;
-            padding: 12px 15px;
-            border: 2px solid #e1e4e8;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-            outline: none;
+            width: 100%; max-width: 300px; padding: 12px 15px; border: 2px solid #e1e4e8;
+            border-radius: 8px; font-size: 16px; outline: none; transition: 0.3s;
         }
         .search-box:focus { border-color: #3498db; }
+        .count-badge { background: #34495e; color: #fff; padding: 5px 12px; border-radius: 20px; font-size: 0.6em; vertical-align: middle; position: relative; top: -15px; }
 
-        /* TAULUKKO */
-        table.main-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        table.main-table th, table.main-table td { padding: 15px 12px; border-bottom: 1px solid #e1e4e8; text-align: left; }
-        table.main-table th { background: #34495e; color: #fff; cursor: pointer; position: sticky; top: 0; user-select: none; }
-        table.main-table tr:hover { background-color: #f8f9fa; }
+        /* SCROLLATTAVA TAULUKKO */
+        .table-container { overflow-x: auto; max-height: 75vh; overflow-y: auto; border: 1px solid #eee; }
         
-        /* MERKIT JA TAGIT */
-        .price-tag { color: #27ae60; font-weight: 800; font-size: 1.1em; background: #e8f5e9; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
-        .term-tag { font-size: 0.85em; color: #555; background: #eee; padding: 4px 8px; border-radius: 4px; }
-        .rank { font-weight: bold; color: #bdc3c7; }
+        table.main-table { width: 100%; border-collapse: collapse; }
+        table.main-table th, table.main-table td { padding: 12px 15px; border-bottom: 1px solid #e1e4e8; text-align: left; }
+        table.main-table th { background: #34495e; color: #fff; cursor: pointer; position: sticky; top: 0; z-index: 10; user-select: none; }
+        table.main-table tr:hover { background-color: #f1f4f8; }
+        
+        .price-tag { color: #27ae60; font-weight: 800; font-size: 1.0em; background: #e8f5e9; padding: 5px 10px; border-radius: 6px; white-space: nowrap; }
+        .term-tag { font-size: 0.85em; color: #555; background: #eee; padding: 4px 8px; border-radius: 4px; white-space: nowrap; }
+        .rank { font-weight: bold; color: #bdc3c7; width: 40px; text-align: center; }
 
         /* NAPIT */
-        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
-        .btn-view { background-color: #3498db; color: white; border: none; padding: 8px 14px; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 0.9em; }
-        .btn-visit { background-color: #27ae60; color: white; padding: 8px 16px; border-radius: 5px; text-decoration: none; font-weight: 600; font-size: 0.9em; display: inline-block; }
+        .btn-group { display: flex; gap: 8px; }
+        .btn-view { background-color: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.85em; }
+        .btn-visit { background-color: #27ae60; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 0.85em; }
         
         /* MODAALI */
         .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(3px); }
-        .modal-content { background-color: #fff; margin: 5% auto; padding: 0; border: 1px solid #888; width: 95%; max-width: 700px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .modal-content { background-color: #fff; margin: 5% auto; padding: 0; border: 1px solid #888; width: 95%; max-width: 700px; border-radius: 8px; }
         .modal-header { background: #2c3e50; color: white; padding: 15px 20px; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; }
         .modal-body { padding: 20px; }
         .close { color: #fff; font-size: 28px; font-weight: bold; cursor: pointer; }
@@ -69,21 +64,20 @@
 <div class="container">
     <div class="header-wrapper">
         <div class="header-content">
-            <h1>Host<span class="logo-accent">Hunter</span></h1>
-            <div class="subtitle">Web-hotellien hintavertailu 2026</div>
+            <h1>Host<span class="logo-accent">Hunter</span><span class="count-badge">50</span></h1>
+            <div class="subtitle">Top 50 Ulkomaiset Web-hotellit 2026</div>
         </div>
-        
-        <input type="text" id="searchInput" class="search-box" placeholder="Etsi hostia, ominaisuutta tai hintaa..." onkeyup="filterHosts()">
+        <input type="text" id="searchInput" class="search-box" placeholder="Etsi hostia, hintaa tai ominaisuutta..." onkeyup="filterHosts()">
     </div>
 
-    <div style="overflow-x:auto;">
+    <div class="table-container">
         <table class="main-table">
             <thead>
                 <tr>
                     <th>#</th>
                     <th onclick="sortHosts('name')">Palveluntarjoaja ⇅</th>
                     <th onclick="sortHosts('price')">Hinta alk. ⇅</th>
-                    <th class="col-term">Sopimuskausi</th>
+                    <th class="col-term">Kausi</th>
                     <th>Toiminnot</th>
                 </tr>
             </thead>
@@ -95,82 +89,158 @@
 <div id="tierModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
-        <h3 id="modalTitle" style="margin:0">Pakettitiedot</h3>
+        <h3 id="modalTitle" style="margin:0">Paketit</h3>
         <span class="close" onclick="closeModal()">&times;</span>
     </div>
     <div class="modal-body">
         <p id="modalDesc" style="margin-bottom: 20px; font-style:italic; color:#666;"></p>
-        
         <table class="tier-table">
             <thead>
                 <tr>
                     <th>Paketti</th>
-                    <th>Hinta / kk</th>
+                    <th>Hinta</th>
                     <th>Levytila</th>
-                    <th>Sivustot</th>
+                    <th>Info</th>
                 </tr>
             </thead>
             <tbody id="tierTableBody"></tbody>
         </table>
-        
-        <div style="margin-top: 25px; text-align:right;">
-            <a href="#" id="modalVisitBtn" target="_blank" rel="noopener noreferrer" class="btn-visit" style="width:100%; text-align:center; display:block; box-sizing:border-box;">Siirry sivustolle &rarr;</a>
+        <div style="margin-top: 25px;">
+            <a href="#" id="modalVisitBtn" target="_blank" class="btn-visit" style="display:block; text-align:center;">Siirry sivustolle &rarr;</a>
         </div>
     </div>
   </div>
 </div>
 
 <script>
-// --- DATA ---
+// --- DATA: 50 ULKOMAISTA WEB-HOTELLIA ---
 const hostsData = [
-    {
-        name: "Hostinger",
-        price: "€2.99",
-        term: "48 kk",
-        description: "Suosittu budjettivalinta aloittelijoille.",
-        affiliate_url: "https://hostinger.com",
-        tiers: [
-            { name: "Premium", price: "€2.99", storage: "100 GB", websites: "100 Sivustoa" },
-            { name: "Business", price: "€3.99", storage: "200 GB", websites: "100 Sivustoa" },
-            { name: "Cloud Startup", price: "€9.99", storage: "200 GB", websites: "300 Sivustoa" }
-        ]
-    },
-    {
-        name: "SiteGround",
-        price: "€5.99",
-        term: "12 kk",
-        description: "Huippuluokan tuki ja nopeus.",
-        affiliate_url: "https://siteground.com",
-        tiers: [
-            { name: "StartUp", price: "€5.99", storage: "10 GB", websites: "1 Sivusto" },
-            { name: "GrowBig", price: "€9.99", storage: "20 GB", websites: "Rajaton" },
-            { name: "GoGeek", price: "€14.99", storage: "40 GB", websites: "Rajaton" }
-        ]
-    },
-    {
-        name: "Bluehost",
-        price: "€2.95",
-        term: "12 kk",
-        description: "WordPressin virallinen suositus.",
-        affiliate_url: "https://bluehost.com",
-        tiers: [
-            { name: "Basic", price: "€2.95", storage: "10 GB", websites: "1 Sivusto" },
-            { name: "Choice Plus", price: "€5.45", storage: "40 GB", websites: "Rajaton" }
-        ]
-    },
-    {
-        name: "A2 Hosting",
-        price: "€2.99",
-        term: "12 kk",
-        description: "Tunnettu Turbo-palvelimistaan.",
-        affiliate_url: "https://a2hosting.com",
-        tiers: [
-            { name: "Startup", price: "€2.99", storage: "100 GB", websites: "1 Sivusto" },
-            { name: "Drive", price: "€5.99", storage: "Rajaton", websites: "Rajaton" }
-        ]
-    },
-    {
-        name: "GreenGeeks",
-        price: "€2.95",
-        term: "12 kk",
-        description: "
+    // --- SUOSITUIMMAT JÄTTILÄISET ---
+    { name: "Hostinger", price: "€2.99", term: "48 kk", desc: "Hinta-laatusuhteeltaan maailman suosituin.", url: "https://hostinger.com", tiers: [{n:"Premium",p:"€2.99",s:"100 GB",w:"Ilmainen SSL"}, {n:"Business",p:"€3.99",s:"200 GB",w:"CDN mukana"}] },
+    { name: "SiteGround", price: "€5.99", term: "12 kk", desc: "Paras asiakaspalvelu ja huippunopeus.", url: "https://siteground.com", tiers: [{n:"StartUp",p:"€5.99",s:"10 GB",w:"1 Sivu"}, {n:"GrowBig",p:"€9.99",s:"20 GB",w:"Rajaton"}] },
+    { name: "Bluehost", price: "€2.75", term: "12 kk", desc: "WordPress.org:n virallinen suositus.", url: "https://bluehost.com", tiers: [{n:"Basic",p:"€2.75",s:"10 GB",w:"1 Sivu"}, {n:"Choice Plus",p:"€5.45",s:"40 GB",w:"Suosituin"}] },
+    { name: "A2 Hosting", price: "€2.99", term: "12 kk", desc: "Tunnettu nopeista Turbo-palvelimista.", url: "https://a2hosting.com", tiers: [{n:"Startup",p:"€2.99",s:"100 GB",w:"Perus"}, {n:"Drive",p:"€5.99",s:"Rajaton",w:"Tuplaresurssit"}] },
+    { name: "GreenGeeks", price: "€2.95", term: "12 kk", desc: "Ympäristöystävällinen Eco-hosting.", url: "https://greengeeks.com", tiers: [{n:"Lite",p:"€2.95",s:"50 GB",w:"1 Sivu"}, {n:"Pro",p:"€4.95",s:"Rajaton",w:"Rajaton"}] },
+    { name: "DreamHost", price: "€2.59", term: "36 kk", desc: "Itsenäinen ja reilu palveluntarjoaja.", url: "https://dreamhost.com", tiers: [{n:"Starter",p:"€2.59",s:"50 GB",w:"1 Sivu"}, {n:"Unlimited",p:"€3.95",s:"Rajaton",w:"Sähköpostit"}] },
+    { name: "GoDaddy", price: "€5.99", term: "36 kk", desc: "Maailman suurin domain-rekisteröijä.", url: "https://godaddy.com", tiers: [{n:"Economy",p:"€5.99",s:"25 GB",w:"1 Sivu"}, {n:"Deluxe",p:"€7.99",s:"50 GB",w:"Rajaton"}] },
+    { name: "HostGator", price: "€2.75", term: "36 kk", desc: "Klassikko, helppo aloittelijoille.", url: "https://hostgator.com", tiers: [{n:"Hatchling",p:"€2.75",s:"10 GB",w:"1 Sivu"}, {n:"Baby",p:"€3.50",s:"Rajaton",w:"Rajaton"}] },
+    { name: "Namecheap", price: "€1.98", term: "24 kk", desc: "Erittäin halpa ja suosittu.", url: "https://namecheap.com", tiers: [{n:"Stellar",p:"€1.98",s:"20 GB",w:"3 Sivua"}, {n:"Stellar Plus",p:"€2.98",s:"Rajaton",w:"AutoBackup"}] },
+    { name: "InMotion", price: "€2.29", term: "36 kk", desc: "Teknisesti vahva USA-host.", url: "https://inmotionhosting.com", tiers: [{n:"Core",p:"€2.29",s:"100 GB",w:"2 Sivua"}, {n:"Launch",p:"€4.99",s:"Rajaton",w:"NVMe SSD"}] },
+
+    // --- EUROOPPALAISET JÄTTILÄISET ---
+    { name: "Hetzner", price: "€1.90", term: "1 kk", desc: "Saksalainen teknologiajätti. Halpa.", url: "https://hetzner.com", tiers: [{n:"Level 1",p:"€1.90",s:"10 GB",w:"1 Sivu"}, {n:"Level 4",p:"€4.90",s:"50 GB",w:"Rajaton"}] },
+    { name: "OVHcloud", price: "€2.19", term: "12 kk", desc: "Euroopan suurin pilvipalvelu.", url: "https://ovhcloud.com", tiers: [{n:"Kimsufi",p:"€2.19",s:"1 GB",w:"Perus"}, {n:"Personal",p:"€3.99",s:"100 GB",w:"Sähköpostit"}] },
+    { name: "Contabo", price: "€4.50", term: "1 kk", desc: "Halpoja VPS-palvelimia Saksasta.", url: "https://contabo.com", tiers: [{n:"VPS S",p:"€4.50",s:"50 GB",w:"4 CPU / 8GB RAM"}, {n:"VPS M",p:"€9.50",s:"100 GB",w:"Tehokas"}] },
+    { name: "One.com", price: "€0.00", term: "3 kk", desc: "Ilmainen alku, kalliimmat uusinnat.", url: "https://one.com", tiers: [{n:"Beginner",p:"€4.99",s:"50 GB",w:"1 Sivu"}, {n:"Explorer",p:"€10.99",s:"100 GB",w:"Rajaton"}] },
+    { name: "IONOS", price: "€1.00", term: "12 kk", desc: "Entinen 1&1, suuri saksalainen.", url: "https://ionos.com", tiers: [{n:"Standard",p:"€1.00",s:"10 GB",w:"1 Sivu"}, {n:"Plus",p:"€6.00",s:"Rajaton",w:"Nopea"}] },
+
+    // --- PREMIUM MANAGED WORDPRESS ---
+    { name: "Kinsta", price: "€35.00", term: "1 kk", desc: "Premium Google Cloud -alusta.", url: "https://kinsta.com", tiers: [{n:"Starter",p:"€35.00",s:"10 GB",w:"25k kävijää"}, {n:"Pro",p:"€70.00",s:"20 GB",w:"50k kävijää"}] },
+    { name: "WP Engine", price: "€20.00", term: "12 kk", desc: "Markkinajohtaja WP-ylläpidossa.", url: "https://wpengine.com", tiers: [{n:"Startup",p:"€20.00",s:"10 GB",w:"1 Sivu"}, {n:"Pro",p:"€49.00",s:"15 GB",w:"3 Sivua"}] },
+    { name: "Cloudways", price: "€11.00", term: "1 kk", desc: "Hallittu pilvipalvelu (DigitalOcean ym).", url: "https://cloudways.com", tiers: [{n:"DO 1GB",p:"€11.00",s:"25 GB",w:"1 CPU"}, {n:"Vultr 1GB",p:"€13.00",s:"32 GB",w:"High Freq"}] },
+    { name: "Flywheel", price: "€13.00", term: "12 kk", desc: "Suunnittelijoiden suosima WP-host.", url: "https://getflywheel.com", tiers: [{n:"Tiny",p:"€13.00",s:"5 GB",w:"5k kävijää"}, {n:"Starter",p:"€25.00",s:"10 GB",w:"25k kävijää"}] },
+    { name: "Rocket.net", price: "€30.00", term: "1 kk", desc: "Maailman nopein WP-hosting (Cloudflare).", url: "https://rocket.net", tiers: [{n:"Starter",p:"€30.00",s:"10 GB",w:"250k kävijää"}, {n:"Pro",p:"€60.00",s:"20 GB",w:"1M kävijää"}] },
+
+    // --- NOUSIJAT & HAASTAJAT ---
+    { name: "FastComet", price: "€2.79", term: "12 kk", desc: "Kiinteät hinnat, ei yllätyskorotuksia.", url: "https://fastcomet.com", tiers: [{n:"FastCloud",p:"€2.79",s:"15 GB",w:"1 Sivu"}, {n:"Plus",p:"€4.39",s:"25 GB",w:"Useita sivuja"}] },
+    { name: "ChemiCloud", price: "€2.99", term: "36 kk", desc: "Erinomainen asiakastyytyväisyys.", url: "https://chemicloud.com", tiers: [{n:"Starter",p:"€2.99",s:"20 GB",w:"1 Sivu"}, {n:"Pro",p:"€4.49",s:"Rajaton",w:"NVMe"}] },
+    { name: "HostPapa", price: "€2.95", term: "36 kk", desc: "Vahva kanadalainen toimija.", url: "https://hostpapa.com", tiers: [{n:"Start",p:"€2.95",s:"100 GB",w:"1 Sivu"}, {n:"Plus",p:"€5.95",s:"Rajaton",w:"Rajaton"}] },
+    { name: "ScalaHosting", price: "€2.95", term: "36 kk", desc: "Oma SPanel-hallinta (vaihtoehto cPanelille).", url: "https://scalahosting.com", tiers: [{n:"Mini",p:"€2.95",s:"10 GB",w:"1 Sivu"}, {n:"Start",p:"€5.95",s:"Rajaton",w:"SPanel"}] },
+    { name: "HostArmada", price: "€2.49", term: "36 kk", desc: "Nopea pilvipohjainen hosting.", url: "https://hostarmada.com", tiers: [{n:"Start Dock",p:"€2.49",s:"15 GB",w:"1 Sivu"}, {n:"Web Warp",p:"€4.11",s:"30 GB",w:"Rajaton"}] },
+
+    // --- VPS & KEHITTÄJÄT ---
+    { name: "DigitalOcean", price: "€6.00", term: "1 kk", desc: "Kehittäjien standardi pilvipalvelu.", url: "https://digitalocean.com", tiers: [{n:"Droplet",p:"€6.00",s:"25 GB",w:"1 CPU"}, {n:"Premium",p:"€12.00",s:"50 GB",w:"Intel/AMD"}] },
+    { name: "Vultr", price: "€5.00", term: "1 kk", desc: "Laaja valikoima sijainteja.", url: "https://vultr.com", tiers: [{n:"Cloud",p:"€5.00",s:"25 GB",w:"High Perf"}, {n:"High Freq",p:"€6.00",s:"32 GB",w:"NVMe"}] },
+    { name: "Linode", price: "€5.00", term: "1 kk", desc: "Akamain omistama luotettava pilvi.", url: "https://linode.com", tiers: [{n:"Nanode",p:"€5.00",s:"25 GB",w:"1 GB RAM"}, {n:"Standard",p:"€10.00",s:"50 GB",w:"2 GB RAM"}] },
+    { name: "Kamatera", price: "€4.00", term: "1 kk", desc: "Kustomoitavat pilvipalvelimet.", url: "https://kamatera.com", tiers: [{n:"Type A",p:"€4.00",s:"20 GB",w:"1 CPU"}, {n:"Type B",p:"€10.00",s:"40 GB",w:"2 CPU"}] },
+
+    // --- MUUT SUOSITUT ---
+    { name: "InterServer", price: "€2.50", term: "1 kk", desc: "Hintalukitus, hinta ei nouse.", url: "https://interserver.net", tiers: [{n:"Standard",p:"€2.50",s:"Rajaton",w:"Rajaton"}] },
+    { name: "Liquid Web", price: "€13.00", term: "1 kk", desc: "High-end yritysratkaisut.", url: "https://liquidweb.com", tiers: [{n:"Spark",p:"€13.00",s:"15 GB",w:"1 Sivu"}, {n:"Maker",p:"€25.00",s:"40 GB",w:"Premium"}] },
+    { name: "AccuWeb", price: "€3.99", term: "12 kk", desc: "Monipuolinen Windows & Linux host.", url: "https://accuwebhosting.com", tiers: [{n:"Personal",p:"€3.99",s:"10 GB",w:"1 Sivu"}, {n:"Small Biz",p:"€5.99",s:"30 GB",w:"3 Sivua"}] },
+    { name: "MochaHost", price: "€1.95", term: "36 kk", desc: "Elinikäinen alennus -takuu.", url: "https://mochahost.com", tiers: [{n:"Soho",p:"€1.95",s:"Rajaton",w:"1 Sivu"}, {n:"Business",p:"€3.95",s:"Rajaton",w:"Rajaton"}] },
+    { name: "TMDHosting", price: "€2.99", term: "12 kk", desc: "Täysin hallittu hosting.", url: "https://tmdhosting.com", tiers: [{n:"Starter",p:"€2.99",s:"SSD",w:"1 Sivu"}, {n:"Business",p:"€4.99",s:"SSD",w:"Rajaton"}] },
+    { name: "HostWinds", price: "€5.24", term: "1 kk", desc: "Hyvä asiakaspalvelu USA:ssa.", url: "https://hostwinds.com", tiers: [{n:"Basic",p:"€5.24",s:"Rajaton",w:"1 Sivu"}, {n:"Advanced",p:"€6.74",s:"Rajaton",w:"4 Sivua"}] },
+    { name: "iPage", price: "€1.99", term: "36 kk", desc: "Erittäin yksinkertainen halpahost.", url: "https://ipage.com", tiers: [{n:"Go Plan",p:"€1.99",s:"Rajaton",w:"Rajaton"}] },
+    { name: "JustHost", price: "€3.95", term: "36 kk", desc: "Perusratkaisu cPanelilla.", url: "https://justhost.com", tiers: [{n:"Basic",p:"€3.95",s:"50 GB",w:"1 Sivu"}, {n:"Plus",p:"€6.95",s:"Rajaton",w:"Rajaton"}] },
+    { name: "FatCow", price: "€3.15", term: "12 kk", desc: "Vanha ja tunnettu brändi.", url: "https://fatcow.com", tiers: [{n:"Original",p:"€3.15",s:"Rajaton",w:"Rajaton"}] },
+    { name: "PowWeb", price: "€3.88", term: "12 kk", desc: "Yksi ainoa paketti kaikille.", url: "https://powweb.com", tiers: [{n:"All-in-One",p:"€3.88",s:"Rajaton",w:"Rajaton"}] },
+    { name: "HostUpon", price: "€3.95", term: "36 kk", desc: "Kanadalainen vaihtoehto.", url: "https://hostupon.com", tiers: [{n:"Starter",p:"€3.95",s:"Rajaton",w:"1 Sivu"}, {n:"Business",p:"€7.95",s:"Rajaton",w:"Rajaton"}] },
+    { name: "StableHost", price: "€1.75", term: "36 kk", desc: "Vakaa ja edullinen.", url: "https://stablehost.com", tiers: [{n:"Starter",p:"€1.75",s:"Rajaton",w:"1 Sivu"}, {n:"Pro",p:"€4.25",s:"Rajaton",w:"Rajaton"}] },
+    { name: "Verpex", price: "€0.60", term: "1 kk", desc: "Todella halpa aloitus (usein tarjouksia).", url: "https://verpex.com", tiers: [{n:"Iron",p:"€0.60",s:"10 GB",w:"1 Sivu"}, {n:"Bronze",p:"€1.80",s:"50 GB",w:"Rajaton"}] },
+    { name: "KnownHost", price: "€3.47", term: "36 kk", desc: "Tunnettu erinomaisesta uptime-ajasta.", url: "https://knownhost.com", tiers: [{n:"Basic",p:"€3.47",s:"5 GB",w:"1 Sivu"}, {n:"Standard",p:"€6.47",s:"20 GB",w:"Rajaton"}] },
+    { name: "BigScoots", price: "€34.95", term: "1 kk", desc: "Täysin hallittu WP-suorituskyky.", url: "https://bigscoots.com", tiers: [{n:"Starter",p:"€34.95",s:"10 GB",w:"250k kävijää"}] },
+    { name: "Pressable", price: "€19.00", term: "1 kk", desc: "Automatticin (WordPressin tekijät) omistama.", url: "https://pressable.com", tiers: [{n:"Personal",p:"€19.00",s:"20 GB",w:"30k kävijää"}] },
+    { name: "WPMU DEV", price: "€12.00", term: "1 kk", desc: "Kaikki-yhdessä WP-alusta.", url: "https://wpmudev.com", tiers: [{n:"Quantum",p:"€12.00",s:"10 GB",w:"1 Sivu"}] },
+    { name: "RoseHosting", price: "€7.95", term: "1 kk", desc: "Linux VPS -asiantuntijat.", url: "https://rosehosting.com", tiers: [{n:"NVMe 1",p:"€7.95",s:"50 GB",w:"1 Sivu"}, {n:"NVMe 2",p:"€14.95",s:"100 GB",w:"Rajaton"}] },
+    { name: "Hostens", price: "€1.20", term: "36 kk", desc: "Liettualainen halpahosting.", url: "https://hostens.com", tiers: [{n:"S10",p:"€1.20",s:"10 GB",w:"10 Sivua"}, {n:"S20",p:"€2.40",s:"20 GB",w:"20 Sivua"}] },
+    { name: "Time4VPS", price: "€2.50", term: "1 kk", desc: "Halpaa VPS-tilaa Euroopasta.", url: "https://time4vps.com", tiers: [{n:"Linux 2",p:"€2.50",s:"20 GB",w:"1 CPU"}, {n:"Linux 4",p:"€5.00",s:"40 GB",w:"2 CPU"}] },
+    { name: "MilesWeb", price: "€1.00", term: "36 kk", desc: "Intialainen jätti, erittäin halpa.", url: "https://milesweb.com", tiers: [{n:"Ignite",p:"€1.00",s:"50 GB",w:"1 Sivu"}, {n:"Elite",p:"€2.00",s:"150 GB",w:"Rajaton"}] }
+];
+
+// --- LOGIIKKA (Ei muutoksia) ---
+let currentData = [...hostsData];
+let sortAsc = true;
+const listBody = document.getElementById("mainTableBody");
+
+function renderTable() {
+    listBody.innerHTML = "";
+    if(currentData.length === 0) { listBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px;">Ei tuloksia.</td></tr>`; return; }
+    
+    currentData.forEach((h, i) => {
+        const originalIndex = hostsData.indexOf(h);
+        listBody.innerHTML += `
+            <tr>
+                <td class="rank">${i + 1}</td>
+                <td><strong>${h.name}</strong><br><small style="color:#777">${h.desc}</small></td>
+                <td><span class="price-tag">${h.price}</span></td>
+                <td class="col-term"><span class="term-tag">${h.term}</span></td>
+                <td>
+                    <div class="btn-group">
+                        <button class="btn-view" onclick="openModal(${originalIndex})">Paketit</button>
+                        <a href="${h.url}" target="_blank" class="btn-visit">Avaa</a>
+                    </div>
+                </td>
+            </tr>`;
+    });
+}
+
+function filterHosts() {
+    const q = document.getElementById("searchInput").value.toLowerCase();
+    currentData = hostsData.filter(h => h.name.toLowerCase().includes(q) || h.desc.toLowerCase().includes(q) || h.price.includes(q));
+    renderTable();
+}
+
+function sortHosts(key) {
+    sortAsc = !sortAsc;
+    currentData.sort((a,b) => {
+        let A = a[key], B = b[key];
+        if(key === 'price') {
+            let nA = parseFloat(A.replace(/[^0-9.,]/g,'').replace(',','.')), nB = parseFloat(B.replace(/[^0-9.,]/g,'').replace(',','.'));
+            return sortAsc ? nA - nB : nB - nA;
+        }
+        return sortAsc ? A.localeCompare(B) : B.localeCompare(A);
+    });
+    renderTable();
+}
+
+// Modaali
+const modal = document.getElementById("tierModal");
+function openModal(idx) {
+    const h = hostsData[idx];
+    document.getElementById("modalTitle").innerText = h.name + " - Paketit";
+    document.getElementById("modalDesc").innerText = h.desc;
+    document.getElementById("modalVisitBtn").href = h.url;
+    const tb = document.getElementById("tierTableBody");
+    tb.innerHTML = "";
+    h.tiers.forEach(t => tb.innerHTML += `<tr><td style="font-weight:bold; color:#2980b9;">${t.n}</td><td style="color:green; font-weight:bold;">${t.p}</td><td>${t.s}</td><td>${t.w}</td></tr>`);
+    modal.style.display = "block";
+}
+window.onclick = e => { if(e.target == modal) modal.style.display = "none"; }
+function closeModal() { modal.style.display = "none"; }
+
+renderTable();
+</script>
+
+</body>
+</html>
