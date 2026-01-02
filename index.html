@@ -6,18 +6,26 @@
     <title>HostHunter - Top Web Hosting Comparison 2026</title>
     
     <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f6f9; color: #333; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f4f6f9; color: #333; }
         .container { max-width: 1400px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        
+        /* HEADER */
         .header-wrapper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; flex-wrap: wrap; }
-        h1 { color: #2c3e50; margin: 0; font-size: 3em; }
+        .header-content { text-align: center; flex-grow: 1; }
+        h1 { color: #2c3e50; margin: 0; font-size: 3em; letter-spacing: -1px; }
         .logo-accent { color: #3498db; }
         .subtitle { color: #7f8c8d; font-size: 1.2em; margin-top: 10px; }
-        table.main-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        table.main-table th, table.main-table td { padding: 15px; border-bottom: 1px solid #e1e4e8; text-align: left; }
-        table.main-table th { background: #34495e; color: #fff; cursor: pointer; }
-        .btn-visit { background: #27ae60; color: #fff; text-decoration: none; padding: 8px 16px; border-radius: 5px; font-weight: bold; display:inline-block; }
-        .price-tag { color: #27ae60; font-weight: bold; font-size: 1.1em; }
-        .loading-text { text-align: center; padding: 50px; color: #7f8c8d; font-size: 1.2em; }
+        
+        /* TABLE */
+        table.main-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.95em; }
+        table.main-table th, table.main-table td { padding: 15px 12px; border-bottom: 1px solid #e1e4e8; text-align: left; vertical-align: middle; }
+        table.main-table th { background: #34495e; color: #fff; cursor: pointer; user-select: none; }
+        table.main-table tr:hover { background-color: #f8f9fa; }
+        
+        .price-tag { color: #27ae60; font-weight: 700; font-size: 1.1em; }
+        .btn-visit { background-color: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; }
+        
+        .loading-text { text-align: center; padding: 40px; color: #7f8c8d; font-size: 1.2em; }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -26,9 +34,9 @@
 
 <div class="container">
     <div class="header-wrapper">
-        <div>
+        <div class="header-content">
             <h1>Host<span class="logo-accent">Hunter</span></h1>
-            <div class="subtitle">Live Database Edition</div>
+            <div class="subtitle">Live Database Edition 2026</div>
         </div>
     </div>
 
@@ -45,28 +53,31 @@
             </thead>
             <tbody id="mainTableBody"></tbody>
         </table>
+        
         <div id="loading" class="loading-text">Ladataan hintoja tietokannasta...</div>
     </div>
 </div>
 
 <script>
-    // 1. ASETUKSET
+    // --- 1. ASETUKSET ---
     const SUPABASE_URL = 'https://oayjeoiqknfqokawxxka.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9heWplb2lxa25mcW9rYXd4eGthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNTY3OTIsImV4cCI6MjA4MjkzMjc5Mn0.Df61FQqXcKrW7VKHnz0y4yKHEUz9sxrWLpHnk4q0ov8';
     
-    // Luodaan yhteys (Vain kerran!)
+    // --- 2. YHTEYDEN LUOMINEN ---
+    // Tämä rivi aiheutti virheen, jos se oli koodissa kahdesti. Nyt se on vain kerran.
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // --- 3. DATAN HAKU ---
     async function fetchHosts() {
         const loading = document.getElementById('loading');
         const tableBody = document.getElementById("mainTableBody");
-
-        // Haetaan data
+        
+        // Haetaan kaikki rivit
         let { data, error } = await supabase.from('hosts').select('*');
 
         if (error) {
-            console.error('Virhe:', error);
-            loading.innerText = "Virhe tietokannan latauksessa: " + error.message;
+            console.error(error);
+            loading.innerText = "Virhe: " + error.message;
             return;
         }
 
@@ -77,13 +88,14 @@
 
         loading.style.display = 'none';
         
-        // Lajitellaan hinnan mukaan
+        // Järjestetään hinnan mukaan
         data.sort((a, b) => {
-             let valA = parseFloat(a.price.replace(/[^0-9.]/g, ''));
-             let valB = parseFloat(b.price.replace(/[^0-9.]/g, ''));
-             return valA - valB;
+            let valA = parseFloat(a.price.replace(/[^0-9.]/g, ''));
+            let valB = parseFloat(b.price.replace(/[^0-9.]/g, ''));
+            return valA - valB;
         });
 
+        // Luodaan taulukko
         data.forEach((h, index) => {
             let row = `<tr>
                 <td>${index + 1}</td>
@@ -96,6 +108,7 @@
         });
     }
 
+    // Käynnistetään
     fetchHosts();
 </script>
 
