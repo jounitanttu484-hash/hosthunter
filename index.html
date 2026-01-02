@@ -3,41 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HostHunter - Top Web Hosting Comparison 2026</title>
     
+    <title>HostHunter - Web Hosting Comparison 2026</title>
+    <meta name="description" content="Compare the top 50 web hosting providers for 2026. Real pricing, storage specs, and hidden renewal rates.">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
+        /* --- CORE STYLES --- */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f4f6f9; color: #333; }
         .container { max-width: 1400px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
         
-        /* HEADER */
-        .header-wrapper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; flex-wrap: wrap; }
-        .header-content { text-align: center; flex-grow: 1; }
-        h1 { color: #2c3e50; margin: 0; font-size: 3em; letter-spacing: -1px; }
+        /* HEADER & ADS */
+        .header-wrapper { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 30px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; flex-wrap: wrap; }
+        .ad-spot { width: 300px; height: 250px; background: #f9f9f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px dashed #ddd; color: #aaa; font-weight: bold; }
+        .header-content { flex-grow: 1; text-align: center; min-width: 300px; }
+
+        h1 { color: #2c3e50; margin: 0; font-size: 2.5em; letter-spacing: -1px; }
         .logo-accent { color: #3498db; }
-        .subtitle { color: #7f8c8d; font-size: 1.2em; margin-top: 10px; }
-        
-        /* TABLE */
+        .subtitle { color: #7f8c8d; font-size: 1.1em; margin-top: 10px; }
+        .date-badge { font-size: 0.9em; color: #fff; font-weight: 600; background-color: #27ae60; display: inline-block; padding: 6px 15px; border-radius: 20px; margin-top: 15px; }
+
+        /* HEADER RESPONSIVENESS */
+        @media (max-width: 1100px) {
+            .header-wrapper { justify-content: center; }
+            .header-content { order: 1; width: 100%; margin-bottom: 20px; }
+            .ad-spot { order: 2; margin: 10px; }
+        }
+
+        /* TABLE STYLES */
         table.main-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.95em; }
         table.main-table th, table.main-table td { padding: 15px 12px; border-bottom: 1px solid #e1e4e8; text-align: left; vertical-align: middle; }
-        table.main-table th { background: #34495e; color: #fff; cursor: pointer; user-select: none; }
+        
+        /* Sticky Header */
+        table.main-table th { background: #34495e; color: #fff; position: sticky; top: 0; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px; z-index: 10; cursor: pointer; user-select: none; }
+        table.main-table th:hover { background: #2c3e50; }
+        
         table.main-table tr:hover { background-color: #f8f9fa; }
         
-        .price-tag { color: #27ae60; font-weight: 700; font-size: 1.1em; }
-        .btn-visit { background-color: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; }
+        .rank { font-weight: bold; color: #bdc3c7; width: 30px; }
         
-        .loading-text { text-align: center; padding: 40px; color: #7f8c8d; font-size: 1.2em; }
-    </style>
+        /* Price Badge */
+        .price-tag { 
+            color: #27ae60; font-weight: 800; font-size: 1.1em; 
+            background: #e8f5e9; padding: 6px 10px; border-radius: 6px; 
+            display: inline-block; min-width: 60px; text-align: center;
+        }
+        
+        .term-tag { font-size: 0.85em; color: #555; background: #eee; padding: 4px 8px; border-radius: 4px; }
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        /* BUTTONS */
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-view { background-color: #3498db; color: white; border: none; padding: 8px 14px; border-radius: 5px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: 0.2s; }
+        .btn-view:hover { background-color: #2980b9; }
+        .btn-visit { background-color: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 0.85em; font-weight: 600; text-decoration: none; transition: 0.2s; display: inline-block; }
+        .btn-visit:hover { background-color: #219150; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); }
+
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            .col-term { display: none; }
+            h1 { font-size: 1.8em; }
+            .btn-group { flex-direction: column; gap: 5px; }
+            .btn-visit, .btn-view { width: 100%; text-align: center; }
+        }
+
+        /* MODAL */
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(3px); }
+        .modal-content { background-color: #fff; margin: 5% auto; padding: 0; border: 1px solid #888; width: 95%; max-width: 700px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: fadeIn 0.2s; }
+        .modal-header { background: #2c3e50; color: white; padding: 15px 20px; border-top-left-radius: 8px; border-top-right-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; }
+        .close { color: #fff; font-size: 28px; font-weight: bold; cursor: pointer; }
+        
+        table.tier-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table.tier-table th { background-color: #ecf0f1; color: #2c3e50; padding: 10px; border: 1px solid #bdc3c7; font-size: 0.9em; }
+        table.tier-table td { padding: 10px; border: 1px solid #bdc3c7; text-align: center; }
+
+        .disclaimer-box { margin-top: 40px; padding: 20px; background-color: #fff8e1; border-left: 5px solid #ffc107; border-radius: 4px; font-size: 0.85em; color: #5d4037; line-height: 1.5; }
+        
+        @keyframes fadeIn { from {opacity: 0; transform: translateY(-10px);} to {opacity: 1; transform: translateY(0);} }
+    </style>
 </head>
 <body>
 
 <div class="container">
+    
     <div class="header-wrapper">
+        <div class="ad-spot">
+            <span>Ad Space 1</span>
+        </div>
+
         <div class="header-content">
             <h1>Host<span class="logo-accent">Hunter</span></h1>
-            <div class="subtitle">Live Database Edition 2026</div>
+            <div class="subtitle">Ultimate Hosting Price Comparison 2026</div>
+            <div class="date-badge">Last Updated: January 2026</div>
         </div>
+
+        <div class="ad-spot">
+            <span>Ad Space 2</span>
+        </div>
+    </div>
+
+    <div style="text-align:center; margin-bottom:20px; color:#666; font-style:italic;">
+        Compare prices, storage, and commitment terms instantly.
     </div>
 
     <div style="overflow-x:auto;">
@@ -45,69 +112,220 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Host Provider</th>
-                    <th>Starting Price</th>
-                    <th>Commitment</th>
-                    <th>Link</th>
+                    <th onclick="sortHosts('name')">Host Provider ⇅</th>
+                    <th onclick="sortHosts('price')">Starting Price ⇅</th>
+                    <th class="col-term">Commitment</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
-            <tbody id="mainTableBody"></tbody>
+            <tbody id="mainTableBody">
+                <tr><td colspan="5" style="text-align:center; padding:30px;">Loading data...</td></tr>
+            </tbody>
         </table>
-        
-        <div id="loading" class="loading-text">Ladataan hintoja tietokannasta...</div>
+    </div>
+
+    <div class="disclaimer-box">
+        <strong>⚠️ Important Disclaimer:</strong> Prices and availability are subject to change. Always verify final terms on the official provider website. Listed prices often reflect introductory offers requiring 12-48 month upfront payment.
     </div>
 </div>
+
+<div id="tierModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+        <h3 id="modalTitle" style="margin:0">Plan Details</h3>
+        <span class="close" onclick="closeModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+        <p id="modalDesc" style="color: #666; font-style: italic; margin-bottom: 20px; border-bottom:1px solid #eee; padding-bottom:10px;"></p>
+        
+        <table class="tier-table">
+            <thead>
+                <tr>
+                    <th>Plan Name</th>
+                    <th>Price / mo</th>
+                    <th>Storage</th>
+                    <th>Sites</th>
+                </tr>
+            </thead>
+            <tbody id="tierTableBody"></tbody>
+        </table>
+
+        <div style="margin-top: 25px;">
+            <a href="#" id="modalVisitBtn" target="_blank" rel="noopener noreferrer" class="btn-visit" style="width:100%; text-align:center; display:block; box-sizing:border-box;">Visit Official Site &rarr;</a>
+        </div>
+    </div>
+  </div>
+</div>
+
 <script>
-    const SUPABASE_URL = 'https://oayjeoiqknfqokawxxka.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9heWplb2lxa25mcW9rYXd4eGthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNTY3OTIsImV4cCI6MjA4MjkzMjc5Mn0.Df61FQqXcKrW7VKHnz0y4yKHEUz9sxrWLpHnk4q0ov8';
-    
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // ---------------------------------------------------------
+    // 1. SETTINGS (YOUR CREDENTIALS)
+    // ---------------------------------------------------------
+    const SUPABASE_URL = 'https://wsfdavmzvrylwtgecmas.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzZmRhdm16dnJ5bHd0Z2VjbWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNTA5MzQsImV4cCI6MjA4MjkyNjkzNH0.vzqu0J_ste9eiuxDbHZ-xXwH3fd9nRup8zDj8ZuSZeA'; 
 
+    // Initialize Supabase
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let hostsData = []; 
+
+    // ---------------------------------------------------------
+    // 2. FETCH DATA
+    // ---------------------------------------------------------
     async function fetchHosts() {
-        const loading = document.getElementById('loading');
-        const tableBody = document.getElementById("mainTableBody");
-        
-        console.log("Yritetään hakea dataa..."); // Tämä näkyy F12 konsolissa
+        const { data, error } = await supabase
+            .from('hosts')
+            .select(`
+                *,
+                tiers ( name, price, storage, websites )
+            `)
+            .order('price', { ascending: true }); // Default cheap to expensive
 
-        // Haetaan data
-        let { data, error } = await supabase.from('hosts').select('*');
-
-        // 1. TARKISTETAAN VIRHEET
         if (error) {
-            console.error("Supabase virhe:", error);
-            loading.innerText = "VIRHE: " + JSON.stringify(error);
-            loading.style.color = "red";
+            console.error('Error:', error);
+            document.getElementById("mainTableBody").innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Error loading data. Please check Supabase connection.</td></tr>`;
             return;
         }
 
-        // 2. TARKISTETAAN ONKO DATAA
-        console.log("Saatu data:", data); // Näet tämän F12 konsolissa
+        hostsData = data;
+        renderTable();
+        updateSchema(hostsData); // Add SEO Schema
+    }
 
-        if (!data || data.length === 0) {
-            loading.innerText = "Yhteys toimii, mutta tietokanta palautti 0 riviä (tyhjä lista). Tarkista RLS tai onko taulussa rivejä.";
+    // ---------------------------------------------------------
+    // 3. RENDER TABLE
+    // ---------------------------------------------------------
+    function renderTable() {
+        const tableBody = document.getElementById("mainTableBody");
+        tableBody.innerHTML = "";
+
+        if (!hostsData || hostsData.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Database is empty. Please add rows in Supabase.</td></tr>`;
             return;
         }
 
-        loading.style.display = 'none';
-        
-        // 3. PIIRRETÄÄN ILMAN JÄRJESTYSTÄ (jotta koodi ei kaadu puuttuviin hintoihin)
-        data.forEach((h, index) => {
-            // Varmistetaan että kentät eivät ole null, jotta ei tule "undefined" näytölle
-            const name = h.name || "Nimi puuttuu";
-            const price = h.price || "-";
-            const term = h.term || "-";
-            const url = h.url || "#";
-
+        hostsData.forEach((host, index) => {
+            let affiliateLink = host.affiliate_url || '#'; 
+            
             let row = `<tr>
-                <td>${index + 1}</td>
-                <td><strong>${name}</strong></td>
-                <td class="price-tag">${price}</td>
-                <td>${term}</td>
-                <td><a href="${url}" target="_blank" class="btn-visit">Visit</a></td>
+                <td class="rank">${index + 1}</td>
+                <td><strong>${host.name}</strong><br><small style="color:#777; font-size:0.8em;">${host.description || ''}</small></td>
+                <td><span class="price-tag">${host.price}</span></td>
+                <td class="col-term"><span class="term-tag">${host.term}</span></td>
+                <td>
+                    <div class="btn-group">
+                        <button class="btn-view" onclick="openModal(${index})">View Plans</button>
+                        <a href="${affiliateLink}" target="_blank" rel="noopener noreferrer" class="btn-visit">Visit Site</a>
+                    </div>
+                </td>
             </tr>`;
             tableBody.innerHTML += row;
         });
     }
 
+    // ---------------------------------------------------------
+    // 4. SORTING LOGIC
+    // ---------------------------------------------------------
+    let sortAsc = true;
+    function sortHosts(key) {
+        sortAsc = !sortAsc;
+        
+        hostsData.sort((a, b) => {
+            let valA = a[key];
+            let valB = b[key];
+
+            if (key === 'price') {
+                // Parse numbers from strings (e.g. "$2.99" -> 2.99)
+                let numA = parseFloat(valA.replace(/[^0-9.,]/g, '').replace(',', '.'));
+                let numB = parseFloat(valB.replace(/[^0-9.,]/g, '').replace(',', '.'));
+                
+                // Treat "Free" as 0
+                if (valA.toLowerCase().includes('free')) numA = 0;
+                if (valB.toLowerCase().includes('free')) numB = 0;
+
+                valA = isNaN(numA) ? 9999 : numA;
+                valB = isNaN(numB) ? 9999 : numB;
+            } else {
+                valA = valA.toLowerCase();
+                valB = valB.toLowerCase();
+            }
+
+            if (valA < valB) return sortAsc ? -1 : 1;
+            if (valA > valB) return sortAsc ? 1 : -1;
+            return 0;
+        });
+
+        renderTable();
+    }
+
+    // ---------------------------------------------------------
+    // 5. MODAL LOGIC
+    // ---------------------------------------------------------
+    const modal = document.getElementById("tierModal");
+    
+    function openModal(index) {
+        let h = hostsData[index];
+        document.getElementById("modalTitle").innerText = h.name + " - Plans";
+        document.getElementById("modalDesc").innerText = h.description || '';
+        document.getElementById("modalVisitBtn").href = h.affiliate_url || '#';
+
+        const tb = document.getElementById("tierTableBody");
+        tb.innerHTML = "";
+        
+        // Sort tiers by price
+        if (h.tiers && h.tiers.length > 0) {
+            h.tiers.sort((a, b) => {
+                 let pA = parseFloat(a.price.replace(/[^0-9.]/g, '')) || 0;
+                 let pB = parseFloat(b.price.replace(/[^0-9.]/g, '')) || 0;
+                 return pA - pB;
+            });
+
+            h.tiers.forEach(t => {
+                tb.innerHTML += `
+                    <tr>
+                        <td style="text-align:left; font-weight:bold; color:#2980b9;">${t.name}</td>
+                        <td style="color:#27ae60; font-weight:bold;">${t.price}</td>
+                        <td>${t.storage}</td>
+                        <td>${t.websites}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            tb.innerHTML = "<tr><td colspan='4'>No plan details available.</td></tr>";
+        }
+        
+        modal.style.display = "block";
+    }
+
+    function closeModal() {
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(e) {
+        if (e.target == modal) closeModal();
+    }
+
+    // ---------------------------------------------------------
+    // 6. SEO: Schema.org JSON-LD Generation
+    // ---------------------------------------------------------
+    function updateSchema(data) {
+        const schemaScript = document.createElement('script');
+        schemaScript.type = 'application/ld+json';
+        
+        const schemaData = {
+            "@context": "https://schema.org",
+            "@type": "Table",
+            "about": "Web Hosting Price Comparison",
+            "dateModified": new Date().toISOString().split('T')[0]
+        };
+        
+        schemaScript.text = JSON.stringify(schemaData);
+        document.head.appendChild(schemaScript);
+    }
+
+    // START
     fetchHosts();
+
 </script>
+
+</body>
+</html>
