@@ -57,60 +57,57 @@
         <div id="loading" class="loading-text">Ladataan hintoja tietokannasta...</div>
     </div>
 </div>
-
 <script>
-    // --- 1. ASETUKSET ---
     const SUPABASE_URL = 'https://oayjeoiqknfqokawxxka.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9heWplb2lxa25mcW9rYXd4eGthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNTY3OTIsImV4cCI6MjA4MjkzMjc5Mn0.Df61FQqXcKrW7VKHnz0y4yKHEUz9sxrWLpHnk4q0ov8';
     
-    // --- 2. YHTEYDEN LUOMINEN ---
-    // Tämä rivi aiheutti virheen, jos se oli koodissa kahdesti. Nyt se on vain kerran.
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // --- 3. DATAN HAKU ---
     async function fetchHosts() {
         const loading = document.getElementById('loading');
         const tableBody = document.getElementById("mainTableBody");
         
-        // Haetaan kaikki rivit
+        console.log("Yritetään hakea dataa..."); // Tämä näkyy F12 konsolissa
+
+        // Haetaan data
         let { data, error } = await supabase.from('hosts').select('*');
 
+        // 1. TARKISTETAAN VIRHEET
         if (error) {
-            console.error(error);
-            loading.innerText = "Virhe: " + error.message;
+            console.error("Supabase virhe:", error);
+            loading.innerText = "VIRHE: " + JSON.stringify(error);
+            loading.style.color = "red";
             return;
         }
 
+        // 2. TARKISTETAAN ONKO DATAA
+        console.log("Saatu data:", data); // Näet tämän F12 konsolissa
+
         if (!data || data.length === 0) {
-            loading.innerText = "Tietokanta on tyhjä.";
+            loading.innerText = "Yhteys toimii, mutta tietokanta palautti 0 riviä (tyhjä lista). Tarkista RLS tai onko taulussa rivejä.";
             return;
         }
 
         loading.style.display = 'none';
         
-        // Järjestetään hinnan mukaan
-        data.sort((a, b) => {
-            let valA = parseFloat(a.price.replace(/[^0-9.]/g, ''));
-            let valB = parseFloat(b.price.replace(/[^0-9.]/g, ''));
-            return valA - valB;
-        });
-
-        // Luodaan taulukko
+        // 3. PIIRRETÄÄN ILMAN JÄRJESTYSTÄ (jotta koodi ei kaadu puuttuviin hintoihin)
         data.forEach((h, index) => {
+            // Varmistetaan että kentät eivät ole null, jotta ei tule "undefined" näytölle
+            const name = h.name || "Nimi puuttuu";
+            const price = h.price || "-";
+            const term = h.term || "-";
+            const url = h.url || "#";
+
             let row = `<tr>
                 <td>${index + 1}</td>
-                <td><strong>${h.name}</strong></td>
-                <td class="price-tag">${h.price}</td>
-                <td>${h.term}</td>
-                <td><a href="${h.url}" target="_blank" class="btn-visit">Visit</a></td>
+                <td><strong>${name}</strong></td>
+                <td class="price-tag">${price}</td>
+                <td>${term}</td>
+                <td><a href="${url}" target="_blank" class="btn-visit">Visit</a></td>
             </tr>`;
             tableBody.innerHTML += row;
         });
     }
 
-    // Käynnistetään
     fetchHosts();
 </script>
-
-</body>
-</html>
