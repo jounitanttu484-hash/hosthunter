@@ -16,6 +16,24 @@
         h1 { color: #2c3e50; margin: 0; }
         .logo-accent { color: #3498db; }
 
+        /* --- MAINOSPAIKAT (UUSI) --- */
+        .ad-space {
+            width: 100%;
+            background-color: #eee; /* Harmaa tausta testiksi */
+            border: 2px dashed #ccc; /* Katkoviiva */
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 30px; /* Väliä alaspäin */
+            border-radius: 8px;
+            color: #777;
+            font-weight: bold;
+            font-size: 0.9em;
+            box-sizing: border-box;
+        }
+        
+        /* Piilotetaan harmaa tausta jos siellä on oikea mainoskuva */
+        .ad-space img { max-width: 100%; height: auto; }
+
         /* LOADING INDICATOR */
         #loader { text-align: center; padding: 20px; font-weight: bold; color: #3498db; display: block; }
 
@@ -36,6 +54,8 @@
         .btn-visit { background-color: #27ae60; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.9em; display: inline-block; }
         .tier-info { font-size: 0.8em; color: #666; margin-top: 5px; }
 
+        .disclaimer { font-size: 0.8em; color: #999; margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; }
+
         @media (max-width: 768px) {
             .header-wrapper { flex-direction: column; align-items: flex-start; }
             .controls { width: 100%; flex-direction: column; }
@@ -46,6 +66,12 @@
 <body>
 
 <div class="container">
+    
+    <div class="ad-space">
+        MAINOSPALKKI (TOP BANNER)<br>
+        <small>Place your Google AdSense or Banner code here</small>
+    </div>
+
     <div class="header-wrapper">
         <div>
             <h1>Host<span class="logo-accent">Hunter</span></h1>
@@ -81,6 +107,15 @@
             <tbody id="mainTableBody"></tbody>
         </table>
     </div>
+
+    <div class="ad-space" style="margin-top: 40px;">
+        MAINOSPALKKI (BOTTOM BANNER)<br>
+        <small>Place your ad code here</small>
+    </div>
+
+    <div class="disclaimer">
+        <strong>Disclaimer:</strong> Prices are subject to change. We may earn a commission from affiliate links.
+    </div>
 </div>
 
 <script>
@@ -88,7 +123,7 @@
 // ASETUKSET
 // ------------------------------------------------------------------
 
-// TÄHÄN ON NYT PÄIVITETTY SINUN LINKKISI:
+// LINKKI SINUN GOOGLE SHEETIIN:
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQt_Eg-EpQQ7ToTDtvrAJIOx4WRbDy0MqU7Lh7RPjsTVvnAy9qMqbTZIanTZssYclbdWy2FidPFcnQ-/pub?output=csv";
 
 // ------------------------------------------------------------------
@@ -106,24 +141,18 @@ function fetchData() {
         download: true,
         header: true,
         complete: function(results) {
-            // Poistetaan tyhjät rivit ja tallennetaan data
             hostsData = results.data.filter(row => row.name && row.price);
             currentData = [...hostsData];
-            
             document.getElementById("loader").style.display = "none";
             document.getElementById("mainTable").style.display = "table";
-            
-            // Järjestetään oletuksena hinnan mukaan
             sortHosts('price'); 
         },
         error: function(err) {
-            document.getElementById("loader").innerText = "Error loading CSV. Check permissions.";
-            console.error(err);
+            document.getElementById("loader").innerText = "Error loading CSV.";
         }
     });
 }
 
-// --- RENDERÖINTI ---
 function renderTable() {
     const tbody = document.getElementById("mainTableBody");
     tbody.innerHTML = "";
@@ -153,7 +182,6 @@ function renderTable() {
     });
 }
 
-// --- SUODATUS ---
 function filterData() {
     const q = document.getElementById("searchInput").value.toLowerCase();
     const term = document.getElementById("termSelect").value;
@@ -169,19 +197,15 @@ function filterData() {
             else if (term === "36") matchesTerm = h.term.includes("36");
             else if (term === "48") matchesTerm = h.term.includes("48");
         }
-
         return matchesSearch && matchesTerm;
     });
-    
     renderTable();
 }
 
-// --- LAJITTELU ---
 function sortHosts(key) {
     sortAsc = !sortAsc;
     currentData.sort((a,b) => {
         let A = a[key] || "", B = b[key] || "";
-        
         if(key === 'price') {
             let nA = parseFloat(A.replace(/[^0-9.,]/g,'').replace(',','.')) || 0;
             let nB = parseFloat(B.replace(/[^0-9.,]/g,'').replace(',','.')) || 0;
