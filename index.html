@@ -1,178 +1,146 @@
-<script>
-/* ---------------------------------------------------------
-   1. SUPABASE
---------------------------------------------------------- */
-const SUPABASE_URL = 'https://wsfdavmzvrylwtgecmas.supabase.co';
-const SUPABASE_KEY = 'PASTE_ANON_KEY_TÄHÄN';
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HostHunter - Tietokantaversio</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-const supabaseClient = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-);
+    <style>
+        /* Samat tyylit kuin aiemmin */
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f6f9; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 10px; }
+        h1 { color: #2c3e50; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 15px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background: #34495e; color: #fff; }
+        .price-tag { color: #27ae60; font-weight: bold; background: #e8f5e9; padding: 5px 10px; border-radius: 5px; }
+        .btn { padding: 8px 15px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; }
+        
+        /* Modal tyylit */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 10% auto; padding: 20px; width: 90%; max-width: 600px; border-radius: 8px; }
+        .close { float: right; font-size: 28px; cursor: pointer; }
+    </style>
+</head>
+<body>
 
-let hostsData = [];
-let sortAsc = true;
+<div class="container">
+    <h1>HostHunter (Supabase Edition)</h1>
+    <p style="text-align:center">Tiedot haetaan suoraan tietokannasta.</p>
 
-/* ---------------------------------------------------------
-   2. FETCH
---------------------------------------------------------- */
-async function fetchHosts() {
-    const { data, error } = await supabaseClient
-        .from('hosts')
-        .select(`
-            id,
-            name,
-            description,
-            price,
-            term,
-            affiliate_url,
-            tiers (
-                name,
-                price,
-                storage,
-                websites
-            )
-        `)
-        .order('price', { ascending: true });
-
-    if (error) {
-        console.error(error);
-        document.getElementById("mainTableBody").innerHTML =
-            `<tr><td colspan="5" style="color:red;text-align:center;">
-                Failed to load data
-            </td></tr>`;
-        return;
-    }
-
-    hostsData = data ?? [];
-    renderTable();
-}
-
-/* ---------------------------------------------------------
-   3. RENDER
---------------------------------------------------------- */
-function renderTable() {
-    const tbody = document.getElementById("mainTableBody");
-    tbody.innerHTML = "";
-
-    if (hostsData.length === 0) {
-        tbody.innerHTML =
-            `<tr><td colspan="5" style="text-align:center;">
-                No hosts found
-            </td></tr>`;
-        return;
-    }
-
-    hostsData.forEach((h, i) => {
-        tbody.insertAdjacentHTML("beforeend", `
+    <table id="hostTable">
+        <thead>
             <tr>
-                <td class="rank">${i + 1}</td>
-                <td>
-                    <strong>${h.name}</strong><br>
-                    <small style="color:#777">${h.description ?? ""}</small>
-                </td>
-                <td>
-                    <span class="price-tag">
-                        ${formatPrice(h.price)}
-                    </span>
-                </td>
-                <td class="col-term">
-                    <span class="term-tag">${h.term ?? "-"}</span>
-                </td>
-                <td>
-                    <div class="btn-group">
-                        <button class="btn-view" onclick="openModal(${i})">
-                            View Plans
-                        </button>
-                        <a class="btn-visit"
-                           href="${h.affiliate_url ?? '#'}"
-                           target="_blank" rel="noopener">
-                           Visit Site
-                        </a>
-                    </div>
-                </td>
+                <th>Palveluntarjoaja</th>
+                <th>Hinta alk.</th>
+                <th>Kausi</th>
+                <th>Toiminnot</th>
             </tr>
-        `);
-    });
-}
+        </thead>
+        <tbody id="tableBody">
+            <tr><td colspan="4">Ladataan tietoja...</td></tr>
+        </tbody>
+    </table>
+</div>
 
-function formatPrice(value) {
-    if (value === null || value === undefined) return "-";
-    if (value === 0) return "Free";
-    return "€" + Number(value).toFixed(2);
-}
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle"></h2>
+        <p id="modalDesc"></p>
+        <h3>Paketit:</h3>
+        <ul id="modalPlans"></ul>
+        <br>
+        <a id="modalLink" href="#" target="_blank" class="btn" style="display:block; text-align:center;">Siirry sivustolle</a>
+    </div>
+</div>
 
-/* ---------------------------------------------------------
-   4. SORT
---------------------------------------------------------- */
-function sortHosts(key) {
-    sortAsc = !sortAsc;
+<script>
+    // --- 1. ASETUKSET (HAE NÄMÄ SUPABASESTA!) ---
+    const SUPABASE_URL = 'https://SINUN-PROJEKTI-ID.supabase.co';
+    const SUPABASE_KEY = 'SINUN-ANON-PUBLIC-KEY';
 
-    hostsData.sort((a, b) => {
-        let A = a[key] ?? "";
-        let B = b[key] ?? "";
+    // Alustetaan yhteys
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let hostsData = [];
 
-        if (key === "price") {
-            return sortAsc ? A - B : B - A;
+    // --- 2. HAKU TIETOKANNASTA ---
+    async function fetchHosts() {
+        // Haetaan hostit JA niihin liittyvät tierit (join)
+        const { data, error } = await supabase
+            .from('hosts')
+            .select(`
+                *,
+                tiers ( name, price, storage, websites )
+            `)
+            .order('price', { ascending: true });
+
+        if (error) {
+            console.error('Virhe:', error);
+            document.getElementById("tableBody").innerHTML = "<tr><td colspan='4'>Virhe ladattaessa tietoja.</td></tr>";
+            return;
         }
 
-        return sortAsc
-            ? A.localeCompare(B)
-            : B.localeCompare(A);
-    });
-
-    renderTable();
-}
-
-/* ---------------------------------------------------------
-   5. MODAL
---------------------------------------------------------- */
-const modal = document.getElementById("tierModal");
-
-function openModal(index) {
-    const h = hostsData[index];
-
-    document.getElementById("modalTitle").innerText =
-        `${h.name} – Plans`;
-    document.getElementById("modalDesc").innerText =
-        h.description ?? "";
-    document.getElementById("modalVisitBtn").href =
-        h.affiliate_url ?? "#";
-
-    const tbody = document.getElementById("tierTableBody");
-    tbody.innerHTML = "";
-
-    if (!h.tiers || h.tiers.length === 0) {
-        tbody.innerHTML =
-            `<tr><td colspan="4">No plans available</td></tr>`;
-    } else {
-        h.tiers
-            .sort((a,b) => a.price - b.price)
-            .forEach(t => {
-                tbody.insertAdjacentHTML("beforeend", `
-                    <tr>
-                        <td style="text-align:left">${t.name}</td>
-                        <td>${formatPrice(t.price)}</td>
-                        <td>${t.storage}</td>
-                        <td>${t.websites}</td>
-                    </tr>
-                `);
-            });
+        hostsData = data;
+        renderTable();
     }
 
-    modal.style.display = "block";
-}
+    // --- 3. TAULUKON PIIRTÄMINEN ---
+    function renderTable() {
+        const tbody = document.getElementById("tableBody");
+        tbody.innerHTML = "";
 
-function closeModal() {
-    modal.style.display = "none";
-}
+        hostsData.forEach((h, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${h.name}</strong><br><small>${h.description || ''}</small></td>
+                    <td><span class="price-tag">${h.price}</span></td>
+                    <td>${h.term}</td>
+                    <td>
+                        <button class="btn" onclick="openModal(${index})">Näytä paketit</button>
+                    </td>
+                </tr>`;
+        });
+    }
 
-window.onclick = e => {
-    if (e.target === modal) closeModal();
-};
+    // --- 4. MODAALI LOGIIKKA ---
+    const modal = document.getElementById("myModal");
 
-/* ---------------------------------------------------------
-   INIT
---------------------------------------------------------- */
-fetchHosts();
+    function openModal(index) {
+        const h = hostsData[index];
+        document.getElementById("modalTitle").innerText = h.name;
+        document.getElementById("modalDesc").innerText = h.description || '';
+        document.getElementById("modalLink").href = h.affiliate_url || '#';
+
+        // Listataan paketit
+        const plansList = document.getElementById("modalPlans");
+        plansList.innerHTML = "";
+        
+        // Supabase palauttaa tierit taulukkona h.tiers
+        if(h.tiers && h.tiers.length > 0) {
+            h.tiers.forEach(t => {
+                plansList.innerHTML += `<li><strong>${t.name}:</strong> ${t.price} (${t.storage}, ${t.websites})</li>`;
+            });
+        } else {
+            plansList.innerHTML = "<li>Ei pakettitietoja.</li>";
+        }
+
+        modal.style.display = "block";
+    }
+
+    function closeModal() {
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(e) {
+        if (e.target == modal) closeModal();
+    }
+
+    // Käynnistetään haku
+    fetchHosts();
 </script>
+
+</body>
+</html>
