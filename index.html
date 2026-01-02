@@ -3,75 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HostHunter - Web Hosting Comparison 2026</title>
+    <title>HostHunter - Live Data</title>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
     <style>
         /* --- STYLES --- */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f4f6f9; color: #333; }
-        .container { max-width: 1400px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; background: #f4f6f9; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
         
         .header-wrapper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; flex-wrap: wrap; gap: 20px; }
-        .header-content { flex-grow: 1; }
-        h1 { color: #2c3e50; margin: 0; font-size: 2.5em; }
+        h1 { color: #2c3e50; margin: 0; }
         .logo-accent { color: #3498db; }
-        .subtitle { color: #7f8c8d; font-size: 1.1em; }
-        
+
+        /* LOADING INDICATOR */
+        #loader { text-align: center; padding: 20px; font-weight: bold; color: #3498db; display: block; }
+
         /* CONTROLS */
-        .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        
-        .search-box {
-            padding: 10px 15px; border: 2px solid #e1e4e8; border-radius: 8px; font-size: 16px; outline: none; width: 200px;
-        }
-        
-        .filter-select {
-            padding: 10px 15px; border: 2px solid #3498db; border-radius: 8px; font-size: 16px; outline: none; background: #f0f8ff; cursor: pointer; font-weight: bold; color: #2c3e50;
-        }
-        .filter-select:hover { background: #e1f0ff; }
+        .controls { display: flex; gap: 10px; }
+        .search-box, .filter-select { padding: 10px; border: 2px solid #e1e4e8; border-radius: 8px; outline: none; }
+        .search-box:focus, .filter-select:focus { border-color: #3498db; }
 
         /* TABLE */
-        .table-container { overflow-x: auto; max-height: 70vh; overflow-y: auto; border: 1px solid #eee; }
-        table.main-table { width: 100%; border-collapse: collapse; }
-        table.main-table th, table.main-table td { padding: 12px 15px; border-bottom: 1px solid #e1e4e8; text-align: left; }
-        table.main-table th { background: #34495e; color: #fff; cursor: pointer; position: sticky; top: 0; z-index: 10; user-select: none; }
-        table.main-table tr:hover { background-color: #f1f4f8; }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid #e1e4e8; text-align: left; }
+        th { background: #34495e; color: #fff; cursor: pointer; }
         
-        .price-tag { color: #27ae60; font-weight: 800; font-size: 1.0em; background: #e8f5e9; padding: 5px 10px; border-radius: 6px; white-space: nowrap; }
-        .term-tag { font-size: 0.85em; color: #555; background: #eee; padding: 4px 8px; border-radius: 4px; white-space: nowrap; font-weight: bold; }
-        .rank { font-weight: bold; color: #bdc3c7; width: 40px; text-align: center; }
-
-        /* BUTTONS */
-        .btn-group { display: flex; gap: 8px; }
-        .btn-view { background-color: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.85em; }
-        .btn-visit { background-color: #27ae60; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 0.85em; }
+        .price-tag { color: #27ae60; font-weight: 800; background: #e8f5e9; padding: 5px 10px; border-radius: 6px; white-space: nowrap; }
+        .term-tag { font-size: 0.85em; color: #555; background: #eee; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
         
-        /* DISCLAIMER BOX */
-        .disclaimer-box {
-            margin-top: 30px;
-            padding: 15px;
-            background-color: #fff8e1;
-            border-left: 5px solid #ffc107;
-            border-radius: 4px;
-            font-size: 0.85em;
-            color: #5d4037;
-            line-height: 1.5;
-        }
-
-        /* MODAL */
-        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(3px); }
-        .modal-content { background-color: #fff; margin: 5% auto; padding: 0; border: 1px solid #888; width: 95%; max-width: 700px; border-radius: 8px; }
-        .modal-header { background: #2c3e50; color: white; padding: 15px 20px; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 20px; }
-        .close { color: #fff; font-size: 28px; font-weight: bold; cursor: pointer; }
-        
-        table.tier-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        table.tier-table th { background-color: #ecf0f1; padding: 10px; border: 1px solid #bdc3c7; font-size: 0.9em; }
-        table.tier-table td { padding: 10px; border: 1px solid #bdc3c7; text-align: center; font-size: 0.95em; }
+        .btn-visit { background-color: #27ae60; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.9em; display: inline-block; }
+        .tier-info { font-size: 0.8em; color: #666; margin-top: 5px; }
 
         @media (max-width: 768px) {
             .header-wrapper { flex-direction: column; align-items: flex-start; }
             .controls { width: 100%; flex-direction: column; }
-            .search-box, .filter-select { width: 100%; }
-            .col-term { display: none; }
+            .col-term, .col-desc { display: none; }
         }
     </style>
 </head>
@@ -79,14 +47,13 @@
 
 <div class="container">
     <div class="header-wrapper">
-        <div class="header-content">
+        <div>
             <h1>Host<span class="logo-accent">Hunter</span></h1>
-            <div class="subtitle">Select Contract Term Length</div>
+            <div style="color:#777">Live Prices from Google Sheets</div>
         </div>
         
         <div class="controls">
-            <input type="text" id="searchInput" class="search-box" placeholder="Search provider..." onkeyup="filterData()">
-            
+            <input type="text" id="searchInput" class="search-box" placeholder="Search..." onkeyup="filterData()">
             <select id="termSelect" class="filter-select" onchange="filterData()">
                 <option value="all">Show All</option>
                 <option value="1">1 Month</option>
@@ -98,178 +65,132 @@
         </div>
     </div>
 
+    <div id="loader">Loading data from Google Sheets...</div>
+
     <div class="table-container">
-        <table class="main-table">
+        <table id="mainTable" style="display:none;">
             <thead>
                 <tr>
-                    <th>#</th>
                     <th onclick="sortHosts('name')">Provider ⇅</th>
-                    <th onclick="sortHosts('price')">Start Price ⇅</th>
+                    <th class="col-desc">Description</th>
+                    <th onclick="sortHosts('price')">Price ⇅</th>
                     <th class="col-term">Term</th>
-                    <th>Actions</th>
+                    <th>Details & Link</th>
                 </tr>
             </thead>
             <tbody id="mainTableBody"></tbody>
         </table>
     </div>
-
-    <div class="disclaimer-box">
-        <strong>⚠️ Disclaimer:</strong> Prices and availability are subject to change by the providers without notice. The "Starting Price" often reflects an introductory offer requiring upfront payment for the full term. Renewal rates may be higher. This website contains affiliate links; we may earn a commission if you purchase through our links at no extra cost to you.
-    </div>
-</div>
-
-<div id="tierModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-        <h3 id="modalTitle" style="margin:0">Plan Details</h3>
-        <span class="close" onclick="closeModal()">&times;</span>
-    </div>
-    <div class="modal-body">
-        <p id="modalDesc" style="margin-bottom: 20px; font-style:italic; color:#666;"></p>
-        <table class="tier-table">
-            <thead>
-                <tr>
-                    <th>Plan Name</th>
-                    <th>Price / mo</th>
-                    <th>Storage</th>
-                    <th>Features</th>
-                </tr>
-            </thead>
-            <tbody id="tierTableBody"></tbody>
-        </table>
-        <div style="margin-top: 25px;">
-            <a href="#" id="modalVisitBtn" target="_blank" class="btn-visit" style="display:block; text-align:center;">Visit Official Site &rarr;</a>
-        </div>
-    </div>
-  </div>
 </div>
 
 <script>
-// --- DATA: TRANSLATED TO ENGLISH ---
-const hostsData = [
-    // --- 1 MONTH ---
-    { name: "Verpex", price: "€0.60", term: "1 mo", desc: "Cheap 1mo trial.", url: "https://verpex.com", tiers: [{n:"Iron",p:"€0.60",s:"10 GB",w:"1 Site"}] },
-    { name: "Hetzner", price: "€1.90", term: "1 mo", desc: "No contract lock-in.", url: "https://hetzner.com", tiers: [{n:"Level 1",p:"€1.90",s:"10 GB",w:"1 Site"}] },
-    { name: "InterServer", price: "€2.50", term: "1 mo", desc: "Price lock guarantee.", url: "https://interserver.net", tiers: [{n:"Standard",p:"€2.50",s:"Unlimited",w:"Unlimited"}] },
-    { name: "Kamatera", price: "€4.00", term: "1 mo", desc: "30 day free trial.", url: "https://kamatera.com", tiers: [{n:"Type A",p:"€4.00",s:"20 GB",w:"1 CPU"}] },
-    { name: "Contabo", price: "€4.50", term: "1 mo", desc: "Cheap monthly VPS.", url: "https://contabo.com", tiers: [{n:"VPS S",p:"€4.50",s:"50 GB",w:"4 CPU"}] },
-    { name: "Vultr", price: "€5.00", term: "1 mo", desc: "Pay as you go cloud.", url: "https://vultr.com", tiers: [{n:"Cloud",p:"€5.00",s:"25 GB",w:"High Perf"}] },
-    { name: "DigitalOcean", price: "€6.00", term: "1 mo", desc: "Developer cloud.", url: "https://digitalocean.com", tiers: [{n:"Droplet",p:"€6.00",s:"25 GB",w:"1 CPU"}] },
-    { name: "Kinsta", price: "€35.00", term: "1 mo", desc: "Premium Managed WP.", url: "https://kinsta.com", tiers: [{n:"Starter",p:"€35.00",s:"10 GB",w:"25k Visits"}] },
+// ------------------------------------------------------------------
+// ASETUKSET
+// ------------------------------------------------------------------
 
-    // --- 12 MONTHS ---
-    { name: "IONOS", price: "€1.00", term: "12 mo", desc: "Very cheap first year.", url: "https://ionos.com", tiers: [{n:"Standard",p:"€1.00",s:"10 GB",w:"1 Site"}] },
-    { name: "Namecheap", price: "€1.98", term: "12 mo", desc: "Popular yearly deal.", url: "https://namecheap.com", tiers: [{n:"Stellar",p:"€1.98",s:"20 GB",w:"3 Sites"}] },
-    { name: "OVHcloud", price: "€2.19", term: "12 mo", desc: "Yearly contract.", url: "https://ovhcloud.com", tiers: [{n:"Kimsufi",p:"€2.19",s:"1 GB",w:"Basic"}] },
-    { name: "Bluehost", price: "€2.75", term: "12 mo", desc: "Recommended for WP.", url: "https://bluehost.com", tiers: [{n:"Basic",p:"€2.75",s:"10 GB",w:"1 Site"}] },
-    { name: "FastComet", price: "€2.79", term: "12 mo", desc: "Flat renewal rates.", url: "https://fastcomet.com", tiers: [{n:"FastCloud",p:"€2.79",s:"15 GB",w:"1 Site"}] },
-    { name: "A2 Hosting", price: "€2.99", term: "12 mo", desc: "Turbo speeds.", url: "https://a2hosting.com", tiers: [{n:"Startup",p:"€2.99",s:"100 GB",w:"1 Site"}] },
-    { name: "GreenGeeks", price: "€2.95", term: "12 mo", desc: "Eco-friendly.", url: "https://greengeeks.com", tiers: [{n:"Lite",p:"€2.95",s:"50 GB",w:"1 Site"}] },
-    { name: "SiteGround", price: "€5.99", term: "12 mo", desc: "Top tier support.", url: "https://siteground.com", tiers: [{n:"StartUp",p:"€5.99",s:"10 GB",w:"1 Site"}] },
+// TÄHÄN ON NYT PÄIVITETTY SINUN LINKKISI:
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQt_Eg-EpQQ7ToTDtvrAJIOx4WRbDy0MqU7Lh7RPjsTVvnAy9qMqbTZIanTZssYclbdWy2FidPFcnQ-/pub?output=csv";
 
-    // --- 24 MONTHS ---
-    { name: "Namecheap", price: "€1.88", term: "24 mo", desc: "Cheaper 2 year deal.", url: "https://namecheap.com", tiers: [{n:"Stellar",p:"€1.88",s:"20 GB",w:"3 Sites"}] },
-    { name: "Hostinger", price: "€3.19", term: "24 mo", desc: "Good mid-term price.", url: "https://hostinger.com", tiers: [{n:"Premium",p:"€3.19",s:"100 GB",w:"100 Sites"}] },
-    { name: "InMotion", price: "€3.49", term: "24 mo", desc: "US Performance.", url: "https://inmotionhosting.com", tiers: [{n:"Core",p:"€3.49",s:"100 GB",w:"2 Sites"}] },
-    { name: "HostPapa", price: "€3.95", term: "24 mo", desc: "Canadian favorite.", url: "https://hostpapa.com", tiers: [{n:"Start",p:"€3.95",s:"100 GB",w:"1 Site"}] },
-    { name: "Bluehost", price: "€3.95", term: "24 mo", desc: "Longer WP deal.", url: "https://bluehost.com", tiers: [{n:"Basic",p:"€3.95",s:"10 GB",w:"1 Site"}] },
+// ------------------------------------------------------------------
 
-    // --- 36 MONTHS ---
-    { name: "MilesWeb", price: "€1.00", term: "36 mo", desc: "Extremely cheap 3yr.", url: "https://milesweb.com", tiers: [{n:"Ignite",p:"€1.00",s:"50 GB",w:"1 Site"}] },
-    { name: "Hostens", price: "€1.20", term: "36 mo", desc: "Cheap commitment.", url: "https://hostens.com", tiers: [{n:"S10",p:"€1.20",s:"10 GB",w:"10 Sites"}] },
-    { name: "StableHost", price: "€1.75", term: "36 mo", desc: "Stable long term.", url: "https://stablehost.com", tiers: [{n:"Starter",p:"€1.75",s:"Unlimited",w:"1 Site"}] },
-    { name: "iPage", price: "€1.99", term: "36 mo", desc: "Simple budget host.", url: "https://ipage.com", tiers: [{n:"Go Plan",p:"€1.99",s:"Unlimited",w:"Unlimited"}] },
-    { name: "DreamHost", price: "€2.59", term: "36 mo", desc: "No price hikes.", url: "https://dreamhost.com", tiers: [{n:"Starter",p:"€2.59",s:"50 GB",w:"1 Site"}] },
-    { name: "ChemiCloud", price: "€2.99", term: "36 mo", desc: "Great uptime.", url: "https://chemicloud.com", tiers: [{n:"Starter",p:"€2.99",s:"20 GB",w:"1 Site"}] },
-    { name: "HostArmada", price: "€2.49", term: "36 mo", desc: "Cloud based.", url: "https://hostarmada.com", tiers: [{n:"Start",p:"€2.49",s:"15 GB",w:"1 Site"}] },
-    { name: "GoDaddy", price: "€5.99", term: "36 mo", desc: "Industry giant.", url: "https://godaddy.com", tiers: [{n:"Economy",p:"€5.99",s:"25 GB",w:"1 Site"}] },
-
-    // --- 48 MONTHS ---
-    { name: "Hostinger", price: "€2.99", term: "48 mo", desc: "Cheapest 4yr deal.", url: "https://hostinger.com", tiers: [{n:"Premium",p:"€2.99",s:"100 GB",w:"100 Sites"}] }
-];
-
-// --- LOGIC ---
-let currentData = [...hostsData];
+let hostsData = [];
+let currentData = [];
 let sortAsc = true;
-const listBody = document.getElementById("mainTableBody");
 
-function renderTable() {
-    listBody.innerHTML = "";
-    if(currentData.length === 0) { listBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; font-size:1.1em; color:#666;">No results found for selected filters.</td></tr>`; return; }
-    
-    currentData.forEach((h, i) => {
-        const originalIndex = hostsData.indexOf(h);
-        listBody.innerHTML += `
-            <tr>
-                <td class="rank">${i + 1}</td>
-                <td><strong>${h.name}</strong><br><small style="color:#777">${h.desc}</small></td>
-                <td><span class="price-tag">${h.price}</span></td>
-                <td class="col-term"><span class="term-tag">${h.term}</span></td>
-                <td>
-                    <div class="btn-group">
-                        <button class="btn-view" onclick="openModal(${originalIndex})">View Plans</button>
-                        <a href="${h.url}" target="_blank" class="btn-visit">Visit</a>
-                    </div>
-                </td>
-            </tr>`;
+window.onload = function() {
+    fetchData();
+};
+
+function fetchData() {
+    Papa.parse(SHEET_URL, {
+        download: true,
+        header: true,
+        complete: function(results) {
+            // Poistetaan tyhjät rivit ja tallennetaan data
+            hostsData = results.data.filter(row => row.name && row.price);
+            currentData = [...hostsData];
+            
+            document.getElementById("loader").style.display = "none";
+            document.getElementById("mainTable").style.display = "table";
+            
+            // Järjestetään oletuksena hinnan mukaan
+            sortHosts('price'); 
+        },
+        error: function(err) {
+            document.getElementById("loader").innerText = "Error loading CSV. Check permissions.";
+            console.error(err);
+        }
     });
 }
 
+// --- RENDERÖINTI ---
+function renderTable() {
+    const tbody = document.getElementById("mainTableBody");
+    tbody.innerHTML = "";
+    
+    if (currentData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px;">No results found.</td></tr>`;
+        return;
+    }
+
+    currentData.forEach(h => {
+        let tierInfo = "";
+        if(h.tier_1_info) tierInfo += `<div>• ${h.tier_1_info}</div>`;
+        if(h.tier_2_info) tierInfo += `<div>• ${h.tier_2_info}</div>`;
+
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${h.name}</strong></td>
+                <td class="col-desc"><small style="color:#666">${h.desc || ''}</small></td>
+                <td><span class="price-tag">${h.price}</span></td>
+                <td class="col-term"><span class="term-tag">${h.term}</span></td>
+                <td>
+                    <a href="${h.url}" target="_blank" class="btn-visit">Visit Site &rarr;</a>
+                    <div class="tier-info">${tierInfo}</div>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// --- SUODATUS ---
 function filterData() {
     const q = document.getElementById("searchInput").value.toLowerCase();
     const term = document.getElementById("termSelect").value;
 
     currentData = hostsData.filter(h => {
-        const matchesSearch = h.name.toLowerCase().includes(q) || h.desc.toLowerCase().includes(q);
+        const matchesSearch = (h.name && h.name.toLowerCase().includes(q)) || (h.desc && h.desc.toLowerCase().includes(q));
         
         let matchesTerm = true;
-        if (term === "1") matchesTerm = h.term === "1 mo";
-        else if (term === "12") matchesTerm = h.term === "12 mo";
-        else if (term === "24") matchesTerm = h.term === "24 mo";
-        else if (term === "36") matchesTerm = h.term === "36 mo";
-        else if (term === "48") matchesTerm = h.term === "48 mo";
+        if (term !== "all" && h.term) {
+            if (term === "1") matchesTerm = h.term.includes("1 mo") || h.term.includes("1 kk");
+            else if (term === "12") matchesTerm = h.term.includes("12");
+            else if (term === "24") matchesTerm = h.term.includes("24");
+            else if (term === "36") matchesTerm = h.term.includes("36");
+            else if (term === "48") matchesTerm = h.term.includes("48");
+        }
 
         return matchesSearch && matchesTerm;
     });
     
-    // Always resort by price
-    sortAsc = true; 
-    sortHosts('price');
+    renderTable();
 }
 
+// --- LAJITTELU ---
 function sortHosts(key) {
-    if(event && event.type === 'click') sortAsc = !sortAsc;
-
+    sortAsc = !sortAsc;
     currentData.sort((a,b) => {
-        let A = a[key], B = b[key];
+        let A = a[key] || "", B = b[key] || "";
+        
         if(key === 'price') {
-            let nA = parseFloat(A.replace(/[^0-9.,]/g,'').replace(',','.')), nB = parseFloat(B.replace(/[^0-9.,]/g,'').replace(',','.'));
+            let nA = parseFloat(A.replace(/[^0-9.,]/g,'').replace(',','.')) || 0;
+            let nB = parseFloat(B.replace(/[^0-9.,]/g,'').replace(',','.')) || 0;
             return sortAsc ? nA - nB : nB - nA;
         }
         return sortAsc ? A.localeCompare(B) : B.localeCompare(A);
     });
     renderTable();
 }
-
-// Modal Logic
-const modal = document.getElementById("tierModal");
-function openModal(idx) {
-    const h = hostsData[idx];
-    document.getElementById("modalTitle").innerText = h.name + " - Plans";
-    document.getElementById("modalDesc").innerText = h.desc;
-    document.getElementById("modalVisitBtn").href = h.url;
-    const tb = document.getElementById("tierTableBody");
-    tb.innerHTML = "";
-    if(h.tiers) {
-        h.tiers.forEach(t => tb.innerHTML += `<tr><td style="font-weight:bold; color:#2980b9;">${t.n}</td><td style="color:green; font-weight:bold;">${t.p}</td><td>${t.s}</td><td>${t.w}</td></tr>`);
-    }
-    modal.style.display = "block";
-}
-window.onclick = e => { if(e.target == modal) modal.style.display = "none"; }
-function closeModal() { modal.style.display = "none"; }
-
-// Start
-sortHosts('price');
 </script>
 
 </body>
