@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HostHunter - Top 50 Ulkomaiset Web-hotellit</title>
+    <title>HostHunter - Hintavertailu</title>
     
     <style>
-        /* --- PERUSTYYLIT --- */
+        /* --- TYYLIT --- */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f4f6f9; color: #333; }
         .container { max-width: 1400px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
         
@@ -14,26 +14,28 @@
         .header-content { flex-grow: 1; }
         h1 { color: #2c3e50; margin: 0; font-size: 2.5em; }
         .logo-accent { color: #3498db; }
-        .subtitle { color: #7f8c8d; font-size: 1.1em; }
-
-        /* HAKUKENTTÄ & BADGE */
-        .search-box {
-            width: 100%; max-width: 300px; padding: 12px 15px; border: 2px solid #e1e4e8;
-            border-radius: 8px; font-size: 16px; outline: none; transition: 0.3s;
-        }
-        .search-box:focus { border-color: #3498db; }
-        .count-badge { background: #34495e; color: #fff; padding: 5px 12px; border-radius: 20px; font-size: 0.6em; vertical-align: middle; position: relative; top: -15px; }
-
-        /* SCROLLATTAVA TAULUKKO */
-        .table-container { overflow-x: auto; max-height: 75vh; overflow-y: auto; border: 1px solid #eee; }
         
+        /* KONTROLLIT (Haku + Valikko) */
+        .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        
+        .search-box {
+            padding: 10px 15px; border: 2px solid #e1e4e8; border-radius: 8px; font-size: 16px; outline: none; width: 200px;
+        }
+        
+        .filter-select {
+            padding: 10px 15px; border: 2px solid #3498db; border-radius: 8px; font-size: 16px; outline: none; background: #f0f8ff; cursor: pointer; font-weight: bold; color: #2c3e50;
+        }
+        .filter-select:hover { background: #e1f0ff; }
+
+        /* TAULUKKO */
+        .table-container { overflow-x: auto; max-height: 75vh; overflow-y: auto; border: 1px solid #eee; }
         table.main-table { width: 100%; border-collapse: collapse; }
         table.main-table th, table.main-table td { padding: 12px 15px; border-bottom: 1px solid #e1e4e8; text-align: left; }
         table.main-table th { background: #34495e; color: #fff; cursor: pointer; position: sticky; top: 0; z-index: 10; user-select: none; }
         table.main-table tr:hover { background-color: #f1f4f8; }
         
         .price-tag { color: #27ae60; font-weight: 800; font-size: 1.0em; background: #e8f5e9; padding: 5px 10px; border-radius: 6px; white-space: nowrap; }
-        .term-tag { font-size: 0.85em; color: #555; background: #eee; padding: 4px 8px; border-radius: 4px; white-space: nowrap; }
+        .term-tag { font-size: 0.85em; color: #555; background: #eee; padding: 4px 8px; border-radius: 4px; white-space: nowrap; font-weight: bold; }
         .rank { font-weight: bold; color: #bdc3c7; width: 40px; text-align: center; }
 
         /* NAPIT */
@@ -52,10 +54,11 @@
         table.tier-table th { background-color: #ecf0f1; padding: 10px; border: 1px solid #bdc3c7; font-size: 0.9em; }
         table.tier-table td { padding: 10px; border: 1px solid #bdc3c7; text-align: center; font-size: 0.95em; }
 
-        @media (max-width: 768px) { 
-            .col-term { display: none; } 
-            .header-wrapper { flex-direction: column; text-align: center; }
-            .search-box { width: 100%; }
+        @media (max-width: 768px) {
+            .header-wrapper { flex-direction: column; align-items: flex-start; }
+            .controls { width: 100%; flex-direction: column; }
+            .search-box, .filter-select { width: 100%; }
+            .col-term { display: none; }
         }
     </style>
 </head>
@@ -64,10 +67,22 @@
 <div class="container">
     <div class="header-wrapper">
         <div class="header-content">
-            <h1>Host<span class="logo-accent">Hunter</span><span class="count-badge">50</span></h1>
-            <div class="subtitle">Top 50 Ulkomaiset Web-hotellit 2026</div>
+            <h1>Host<span class="logo-accent">Hunter</span></h1>
+            <div class="subtitle">Valitse sopimuskauden pituus</div>
         </div>
-        <input type="text" id="searchInput" class="search-box" placeholder="Etsi hostia, hintaa tai ominaisuutta..." onkeyup="filterHosts()">
+        
+        <div class="controls">
+            <input type="text" id="searchInput" class="search-box" placeholder="Etsi nimellä..." onkeyup="filterData()">
+            
+            <select id="termSelect" class="filter-select" onchange="filterData()">
+                <option value="all">Näytä kaikki</option>
+                <option value="1">1 Kuukausi</option>
+                <option value="12">12 Kuukautta</option>
+                <option value="24">24 Kuukautta</option>
+                <option value="36">36 Kuukautta</option>
+                <option value="48">48 Kuukautta</option>
+            </select>
+        </div>
     </div>
 
     <div class="table-container">
@@ -113,79 +128,57 @@
 </div>
 
 <script>
-// --- DATA: 50 ULKOMAISTA WEB-HOTELLIA ---
+// --- DATA: LAJITELTU KAUSIEN MUKAAN ---
 const hostsData = [
-    // --- SUOSITUIMMAT JÄTTILÄISET ---
-    { name: "Hostinger", price: "€2.99", term: "48 kk", desc: "Hinta-laatusuhteeltaan maailman suosituin.", url: "https://hostinger.com", tiers: [{n:"Premium",p:"€2.99",s:"100 GB",w:"Ilmainen SSL"}, {n:"Business",p:"€3.99",s:"200 GB",w:"CDN mukana"}] },
-    { name: "SiteGround", price: "€5.99", term: "12 kk", desc: "Paras asiakaspalvelu ja huippunopeus.", url: "https://siteground.com", tiers: [{n:"StartUp",p:"€5.99",s:"10 GB",w:"1 Sivu"}, {n:"GrowBig",p:"€9.99",s:"20 GB",w:"Rajaton"}] },
-    { name: "Bluehost", price: "€2.75", term: "12 kk", desc: "WordPress.org:n virallinen suositus.", url: "https://bluehost.com", tiers: [{n:"Basic",p:"€2.75",s:"10 GB",w:"1 Sivu"}, {n:"Choice Plus",p:"€5.45",s:"40 GB",w:"Suosituin"}] },
-    { name: "A2 Hosting", price: "€2.99", term: "12 kk", desc: "Tunnettu nopeista Turbo-palvelimista.", url: "https://a2hosting.com", tiers: [{n:"Startup",p:"€2.99",s:"100 GB",w:"Perus"}, {n:"Drive",p:"€5.99",s:"Rajaton",w:"Tuplaresurssit"}] },
-    { name: "GreenGeeks", price: "€2.95", term: "12 kk", desc: "Ympäristöystävällinen Eco-hosting.", url: "https://greengeeks.com", tiers: [{n:"Lite",p:"€2.95",s:"50 GB",w:"1 Sivu"}, {n:"Pro",p:"€4.95",s:"Rajaton",w:"Rajaton"}] },
-    { name: "DreamHost", price: "€2.59", term: "36 kk", desc: "Itsenäinen ja reilu palveluntarjoaja.", url: "https://dreamhost.com", tiers: [{n:"Starter",p:"€2.59",s:"50 GB",w:"1 Sivu"}, {n:"Unlimited",p:"€3.95",s:"Rajaton",w:"Sähköpostit"}] },
-    { name: "GoDaddy", price: "€5.99", term: "36 kk", desc: "Maailman suurin domain-rekisteröijä.", url: "https://godaddy.com", tiers: [{n:"Economy",p:"€5.99",s:"25 GB",w:"1 Sivu"}, {n:"Deluxe",p:"€7.99",s:"50 GB",w:"Rajaton"}] },
-    { name: "HostGator", price: "€2.75", term: "36 kk", desc: "Klassikko, helppo aloittelijoille.", url: "https://hostgator.com", tiers: [{n:"Hatchling",p:"€2.75",s:"10 GB",w:"1 Sivu"}, {n:"Baby",p:"€3.50",s:"Rajaton",w:"Rajaton"}] },
-    { name: "Namecheap", price: "€1.98", term: "24 kk", desc: "Erittäin halpa ja suosittu.", url: "https://namecheap.com", tiers: [{n:"Stellar",p:"€1.98",s:"20 GB",w:"3 Sivua"}, {n:"Stellar Plus",p:"€2.98",s:"Rajaton",w:"AutoBackup"}] },
-    { name: "InMotion", price: "€2.29", term: "36 kk", desc: "Teknisesti vahva USA-host.", url: "https://inmotionhosting.com", tiers: [{n:"Core",p:"€2.29",s:"100 GB",w:"2 Sivua"}, {n:"Launch",p:"€4.99",s:"Rajaton",w:"NVMe SSD"}] },
+    // --- 1 KUUKAUSI ---
+    { name: "Verpex", price: "€0.60", term: "1 kk", desc: "Halpa 1kk kokeilu.", url: "https://verpex.com", tiers: [{n:"Iron",p:"€0.60",s:"10 GB",w:"1 Sivu"}] },
+    { name: "Hetzner", price: "€1.90", term: "1 kk", desc: "Ei määräaikaa.", url: "https://hetzner.com", tiers: [{n:"Level 1",p:"€1.90",s:"10 GB",w:"1 Sivu"}] },
+    { name: "InterServer", price: "€2.50", term: "1 kk", desc: "Kiinteä kuukausihinta.", url: "https://interserver.net", tiers: [{n:"Standard",p:"€2.50",s:"Rajaton",w:"Rajaton"}] },
+    { name: "Kamatera", price: "€4.00", term: "1 kk", desc: "30 päivän ilmainen kokeilu.", url: "https://kamatera.com", tiers: [{n:"Type A",p:"€4.00",s:"20 GB",w:"1 CPU"}] },
+    { name: "Contabo", price: "€4.50", term: "1 kk", desc: "Halpa VPS kuukausimaksulla.", url: "https://contabo.com", tiers: [{n:"VPS S",p:"€4.50",s:"50 GB",w:"4 CPU"}] },
+    { name: "Vultr", price: "€5.00", term: "1 kk", desc: "Maksa vain käytöstä.", url: "https://vultr.com", tiers: [{n:"Cloud",p:"€5.00",s:"25 GB",w:"High Perf"}] },
+    { name: "DigitalOcean", price: "€6.00", term: "1 kk", desc: "Kehittäjille, tuntiveloitus.", url: "https://digitalocean.com", tiers: [{n:"Droplet",p:"€6.00",s:"25 GB",w:"1 CPU"}] },
+    { name: "Kinsta", price: "€35.00", term: "1 kk", desc: "Premium WP kuukausimaksulla.", url: "https://kinsta.com", tiers: [{n:"Starter",p:"€35.00",s:"10 GB",w:"25k kävijää"}] },
 
-    // --- EUROOPPALAISET JÄTTILÄISET ---
-    { name: "Hetzner", price: "€1.90", term: "1 kk", desc: "Saksalainen teknologiajätti. Halpa.", url: "https://hetzner.com", tiers: [{n:"Level 1",p:"€1.90",s:"10 GB",w:"1 Sivu"}, {n:"Level 4",p:"€4.90",s:"50 GB",w:"Rajaton"}] },
-    { name: "OVHcloud", price: "€2.19", term: "12 kk", desc: "Euroopan suurin pilvipalvelu.", url: "https://ovhcloud.com", tiers: [{n:"Kimsufi",p:"€2.19",s:"1 GB",w:"Perus"}, {n:"Personal",p:"€3.99",s:"100 GB",w:"Sähköpostit"}] },
-    { name: "Contabo", price: "€4.50", term: "1 kk", desc: "Halpoja VPS-palvelimia Saksasta.", url: "https://contabo.com", tiers: [{n:"VPS S",p:"€4.50",s:"50 GB",w:"4 CPU / 8GB RAM"}, {n:"VPS M",p:"€9.50",s:"100 GB",w:"Tehokas"}] },
-    { name: "One.com", price: "€0.00", term: "3 kk", desc: "Ilmainen alku, kalliimmat uusinnat.", url: "https://one.com", tiers: [{n:"Beginner",p:"€4.99",s:"50 GB",w:"1 Sivu"}, {n:"Explorer",p:"€10.99",s:"100 GB",w:"Rajaton"}] },
-    { name: "IONOS", price: "€1.00", term: "12 kk", desc: "Entinen 1&1, suuri saksalainen.", url: "https://ionos.com", tiers: [{n:"Standard",p:"€1.00",s:"10 GB",w:"1 Sivu"}, {n:"Plus",p:"€6.00",s:"Rajaton",w:"Nopea"}] },
+    // --- 12 KUUKAUTTA ---
+    { name: "IONOS", price: "€1.00", term: "12 kk", desc: "Erittäin halpa 1. vuosi.", url: "https://ionos.com", tiers: [{n:"Standard",p:"€1.00",s:"10 GB",w:"1 Sivu"}] },
+    { name: "Namecheap", price: "€1.98", term: "12 kk", desc: "Suosittu vuosidiili.", url: "https://namecheap.com", tiers: [{n:"Stellar",p:"€1.98",s:"20 GB",w:"3 Sivua"}] },
+    { name: "OVHcloud", price: "€2.19", term: "12 kk", desc: "Vuosisopimus.", url: "https://ovhcloud.com", tiers: [{n:"Kimsufi",p:"€2.19",s:"1 GB",w:"Perus"}] },
+    { name: "Bluehost", price: "€2.75", term: "12 kk", desc: "Vuoden sitoutuminen.", url: "https://bluehost.com", tiers: [{n:"Basic",p:"€2.75",s:"10 GB",w:"1 Sivu"}] },
+    { name: "FastComet", price: "€2.79", term: "12 kk", desc: "Hyvä vuosihinta.", url: "https://fastcomet.com", tiers: [{n:"FastCloud",p:"€2.79",s:"15 GB",w:"1 Sivu"}] },
+    { name: "A2 Hosting", price: "€2.99", term: "12 kk", desc: "Nopea vuosisopimus.", url: "https://a2hosting.com", tiers: [{n:"Startup",p:"€2.99",s:"100 GB",w:"1 Sivu"}] },
+    { name: "GreenGeeks", price: "€2.95", term: "12 kk", desc: "Eco-hosting vuodeksi.", url: "https://greengeeks.com", tiers: [{n:"Lite",p:"€2.95",s:"50 GB",w:"1 Sivu"}] },
+    { name: "SiteGround", price: "€5.99", term: "12 kk", desc: "Premium-tuki (12kk).", url: "https://siteground.com", tiers: [{n:"StartUp",p:"€5.99",s:"10 GB",w:"1 Sivu"}] },
 
-    // --- PREMIUM MANAGED WORDPRESS ---
-    { name: "Kinsta", price: "€35.00", term: "1 kk", desc: "Premium Google Cloud -alusta.", url: "https://kinsta.com", tiers: [{n:"Starter",p:"€35.00",s:"10 GB",w:"25k kävijää"}, {n:"Pro",p:"€70.00",s:"20 GB",w:"50k kävijää"}] },
-    { name: "WP Engine", price: "€20.00", term: "12 kk", desc: "Markkinajohtaja WP-ylläpidossa.", url: "https://wpengine.com", tiers: [{n:"Startup",p:"€20.00",s:"10 GB",w:"1 Sivu"}, {n:"Pro",p:"€49.00",s:"15 GB",w:"3 Sivua"}] },
-    { name: "Cloudways", price: "€11.00", term: "1 kk", desc: "Hallittu pilvipalvelu (DigitalOcean ym).", url: "https://cloudways.com", tiers: [{n:"DO 1GB",p:"€11.00",s:"25 GB",w:"1 CPU"}, {n:"Vultr 1GB",p:"€13.00",s:"32 GB",w:"High Freq"}] },
-    { name: "Flywheel", price: "€13.00", term: "12 kk", desc: "Suunnittelijoiden suosima WP-host.", url: "https://getflywheel.com", tiers: [{n:"Tiny",p:"€13.00",s:"5 GB",w:"5k kävijää"}, {n:"Starter",p:"€25.00",s:"10 GB",w:"25k kävijää"}] },
-    { name: "Rocket.net", price: "€30.00", term: "1 kk", desc: "Maailman nopein WP-hosting (Cloudflare).", url: "https://rocket.net", tiers: [{n:"Starter",p:"€30.00",s:"10 GB",w:"250k kävijää"}, {n:"Pro",p:"€60.00",s:"20 GB",w:"1M kävijää"}] },
+    // --- 24 KUUKAUTTA ---
+    { name: "Namecheap", price: "€1.88", term: "24 kk", desc: "Halvempi 2 vuoden diili.", url: "https://namecheap.com", tiers: [{n:"Stellar",p:"€1.88",s:"20 GB",w:"3 Sivua"}] },
+    { name: "Hostinger", price: "€3.19", term: "24 kk", desc: "Hyvä keskihinta 2 vuodelle.", url: "https://hostinger.com", tiers: [{n:"Premium",p:"€3.19",s:"100 GB",w:"100 Sivua"}] },
+    { name: "InMotion", price: "€3.49", term: "24 kk", desc: "USA teho-hosting 2v.", url: "https://inmotionhosting.com", tiers: [{n:"Core",p:"€3.49",s:"100 GB",w:"2 Sivua"}] },
+    { name: "HostPapa", price: "€3.95", term: "24 kk", desc: "Kanadalainen 2v sopimus.", url: "https://hostpapa.com", tiers: [{n:"Start",p:"€3.95",s:"100 GB",w:"1 Sivu"}] },
+    { name: "Bluehost", price: "€3.95", term: "24 kk", desc: "Pidempi WordPress-diili.", url: "https://bluehost.com", tiers: [{n:"Basic",p:"€3.95",s:"10 GB",w:"1 Sivu"}] },
 
-    // --- NOUSIJAT & HAASTAJAT ---
-    { name: "FastComet", price: "€2.79", term: "12 kk", desc: "Kiinteät hinnat, ei yllätyskorotuksia.", url: "https://fastcomet.com", tiers: [{n:"FastCloud",p:"€2.79",s:"15 GB",w:"1 Sivu"}, {n:"Plus",p:"€4.39",s:"25 GB",w:"Useita sivuja"}] },
-    { name: "ChemiCloud", price: "€2.99", term: "36 kk", desc: "Erinomainen asiakastyytyväisyys.", url: "https://chemicloud.com", tiers: [{n:"Starter",p:"€2.99",s:"20 GB",w:"1 Sivu"}, {n:"Pro",p:"€4.49",s:"Rajaton",w:"NVMe"}] },
-    { name: "HostPapa", price: "€2.95", term: "36 kk", desc: "Vahva kanadalainen toimija.", url: "https://hostpapa.com", tiers: [{n:"Start",p:"€2.95",s:"100 GB",w:"1 Sivu"}, {n:"Plus",p:"€5.95",s:"Rajaton",w:"Rajaton"}] },
-    { name: "ScalaHosting", price: "€2.95", term: "36 kk", desc: "Oma SPanel-hallinta (vaihtoehto cPanelille).", url: "https://scalahosting.com", tiers: [{n:"Mini",p:"€2.95",s:"10 GB",w:"1 Sivu"}, {n:"Start",p:"€5.95",s:"Rajaton",w:"SPanel"}] },
-    { name: "HostArmada", price: "€2.49", term: "36 kk", desc: "Nopea pilvipohjainen hosting.", url: "https://hostarmada.com", tiers: [{n:"Start Dock",p:"€2.49",s:"15 GB",w:"1 Sivu"}, {n:"Web Warp",p:"€4.11",s:"30 GB",w:"Rajaton"}] },
+    // --- 36 KUUKAUTTA ---
+    { name: "MilesWeb", price: "€1.00", term: "36 kk", desc: "Erittäin halpa 3 vuotta.", url: "https://milesweb.com", tiers: [{n:"Ignite",p:"€1.00",s:"50 GB",w:"1 Sivu"}] },
+    { name: "Hostens", price: "€1.20", term: "36 kk", desc: "Halpa sitoutuminen.", url: "https://hostens.com", tiers: [{n:"S10",p:"€1.20",s:"10 GB",w:"10 Sivua"}] },
+    { name: "StableHost", price: "€1.75", term: "36 kk", desc: "Vakaa pitkä sopimus.", url: "https://stablehost.com", tiers: [{n:"Starter",p:"€1.75",s:"Rajaton",w:"1 Sivu"}] },
+    { name: "iPage", price: "€1.99", term: "36 kk", desc: "Vanha klassikko 3v.", url: "https://ipage.com", tiers: [{n:"Go Plan",p:"€1.99",s:"Rajaton",w:"Rajaton"}] },
+    { name: "DreamHost", price: "€2.59", term: "36 kk", desc: "Ei yllätyskorotuksia.", url: "https://dreamhost.com", tiers: [{n:"Starter",p:"€2.59",s:"50 GB",w:"1 Sivu"}] },
+    { name: "ChemiCloud", price: "€2.99", term: "36 kk", desc: "Laadukas pilvi 3 vuodeksi.", url: "https://chemicloud.com", tiers: [{n:"Starter",p:"€2.99",s:"20 GB",w:"1 Sivu"}] },
+    { name: "HostArmada", price: "€2.49", term: "36 kk", desc: "Nopea pilvi pitkällä ajalla.", url: "https://hostarmada.com", tiers: [{n:"Start",p:"€2.49",s:"15 GB",w:"1 Sivu"}] },
+    { name: "GoDaddy", price: "€5.99", term: "36 kk", desc: "Iso toimija 3v sopimuksella.", url: "https://godaddy.com", tiers: [{n:"Economy",p:"€5.99",s:"25 GB",w:"1 Sivu"}] },
 
-    // --- VPS & KEHITTÄJÄT ---
-    { name: "DigitalOcean", price: "€6.00", term: "1 kk", desc: "Kehittäjien standardi pilvipalvelu.", url: "https://digitalocean.com", tiers: [{n:"Droplet",p:"€6.00",s:"25 GB",w:"1 CPU"}, {n:"Premium",p:"€12.00",s:"50 GB",w:"Intel/AMD"}] },
-    { name: "Vultr", price: "€5.00", term: "1 kk", desc: "Laaja valikoima sijainteja.", url: "https://vultr.com", tiers: [{n:"Cloud",p:"€5.00",s:"25 GB",w:"High Perf"}, {n:"High Freq",p:"€6.00",s:"32 GB",w:"NVMe"}] },
-    { name: "Linode", price: "€5.00", term: "1 kk", desc: "Akamain omistama luotettava pilvi.", url: "https://linode.com", tiers: [{n:"Nanode",p:"€5.00",s:"25 GB",w:"1 GB RAM"}, {n:"Standard",p:"€10.00",s:"50 GB",w:"2 GB RAM"}] },
-    { name: "Kamatera", price: "€4.00", term: "1 kk", desc: "Kustomoitavat pilvipalvelimet.", url: "https://kamatera.com", tiers: [{n:"Type A",p:"€4.00",s:"20 GB",w:"1 CPU"}, {n:"Type B",p:"€10.00",s:"40 GB",w:"2 CPU"}] },
-
-    // --- MUUT SUOSITUT ---
-    { name: "InterServer", price: "€2.50", term: "1 kk", desc: "Hintalukitus, hinta ei nouse.", url: "https://interserver.net", tiers: [{n:"Standard",p:"€2.50",s:"Rajaton",w:"Rajaton"}] },
-    { name: "Liquid Web", price: "€13.00", term: "1 kk", desc: "High-end yritysratkaisut.", url: "https://liquidweb.com", tiers: [{n:"Spark",p:"€13.00",s:"15 GB",w:"1 Sivu"}, {n:"Maker",p:"€25.00",s:"40 GB",w:"Premium"}] },
-    { name: "AccuWeb", price: "€3.99", term: "12 kk", desc: "Monipuolinen Windows & Linux host.", url: "https://accuwebhosting.com", tiers: [{n:"Personal",p:"€3.99",s:"10 GB",w:"1 Sivu"}, {n:"Small Biz",p:"€5.99",s:"30 GB",w:"3 Sivua"}] },
-    { name: "MochaHost", price: "€1.95", term: "36 kk", desc: "Elinikäinen alennus -takuu.", url: "https://mochahost.com", tiers: [{n:"Soho",p:"€1.95",s:"Rajaton",w:"1 Sivu"}, {n:"Business",p:"€3.95",s:"Rajaton",w:"Rajaton"}] },
-    { name: "TMDHosting", price: "€2.99", term: "12 kk", desc: "Täysin hallittu hosting.", url: "https://tmdhosting.com", tiers: [{n:"Starter",p:"€2.99",s:"SSD",w:"1 Sivu"}, {n:"Business",p:"€4.99",s:"SSD",w:"Rajaton"}] },
-    { name: "HostWinds", price: "€5.24", term: "1 kk", desc: "Hyvä asiakaspalvelu USA:ssa.", url: "https://hostwinds.com", tiers: [{n:"Basic",p:"€5.24",s:"Rajaton",w:"1 Sivu"}, {n:"Advanced",p:"€6.74",s:"Rajaton",w:"4 Sivua"}] },
-    { name: "iPage", price: "€1.99", term: "36 kk", desc: "Erittäin yksinkertainen halpahost.", url: "https://ipage.com", tiers: [{n:"Go Plan",p:"€1.99",s:"Rajaton",w:"Rajaton"}] },
-    { name: "JustHost", price: "€3.95", term: "36 kk", desc: "Perusratkaisu cPanelilla.", url: "https://justhost.com", tiers: [{n:"Basic",p:"€3.95",s:"50 GB",w:"1 Sivu"}, {n:"Plus",p:"€6.95",s:"Rajaton",w:"Rajaton"}] },
-    { name: "FatCow", price: "€3.15", term: "12 kk", desc: "Vanha ja tunnettu brändi.", url: "https://fatcow.com", tiers: [{n:"Original",p:"€3.15",s:"Rajaton",w:"Rajaton"}] },
-    { name: "PowWeb", price: "€3.88", term: "12 kk", desc: "Yksi ainoa paketti kaikille.", url: "https://powweb.com", tiers: [{n:"All-in-One",p:"€3.88",s:"Rajaton",w:"Rajaton"}] },
-    { name: "HostUpon", price: "€3.95", term: "36 kk", desc: "Kanadalainen vaihtoehto.", url: "https://hostupon.com", tiers: [{n:"Starter",p:"€3.95",s:"Rajaton",w:"1 Sivu"}, {n:"Business",p:"€7.95",s:"Rajaton",w:"Rajaton"}] },
-    { name: "StableHost", price: "€1.75", term: "36 kk", desc: "Vakaa ja edullinen.", url: "https://stablehost.com", tiers: [{n:"Starter",p:"€1.75",s:"Rajaton",w:"1 Sivu"}, {n:"Pro",p:"€4.25",s:"Rajaton",w:"Rajaton"}] },
-    { name: "Verpex", price: "€0.60", term: "1 kk", desc: "Todella halpa aloitus (usein tarjouksia).", url: "https://verpex.com", tiers: [{n:"Iron",p:"€0.60",s:"10 GB",w:"1 Sivu"}, {n:"Bronze",p:"€1.80",s:"50 GB",w:"Rajaton"}] },
-    { name: "KnownHost", price: "€3.47", term: "36 kk", desc: "Tunnettu erinomaisesta uptime-ajasta.", url: "https://knownhost.com", tiers: [{n:"Basic",p:"€3.47",s:"5 GB",w:"1 Sivu"}, {n:"Standard",p:"€6.47",s:"20 GB",w:"Rajaton"}] },
-    { name: "BigScoots", price: "€34.95", term: "1 kk", desc: "Täysin hallittu WP-suorituskyky.", url: "https://bigscoots.com", tiers: [{n:"Starter",p:"€34.95",s:"10 GB",w:"250k kävijää"}] },
-    { name: "Pressable", price: "€19.00", term: "1 kk", desc: "Automatticin (WordPressin tekijät) omistama.", url: "https://pressable.com", tiers: [{n:"Personal",p:"€19.00",s:"20 GB",w:"30k kävijää"}] },
-    { name: "WPMU DEV", price: "€12.00", term: "1 kk", desc: "Kaikki-yhdessä WP-alusta.", url: "https://wpmudev.com", tiers: [{n:"Quantum",p:"€12.00",s:"10 GB",w:"1 Sivu"}] },
-    { name: "RoseHosting", price: "€7.95", term: "1 kk", desc: "Linux VPS -asiantuntijat.", url: "https://rosehosting.com", tiers: [{n:"NVMe 1",p:"€7.95",s:"50 GB",w:"1 Sivu"}, {n:"NVMe 2",p:"€14.95",s:"100 GB",w:"Rajaton"}] },
-    { name: "Hostens", price: "€1.20", term: "36 kk", desc: "Liettualainen halpahosting.", url: "https://hostens.com", tiers: [{n:"S10",p:"€1.20",s:"10 GB",w:"10 Sivua"}, {n:"S20",p:"€2.40",s:"20 GB",w:"20 Sivua"}] },
-    { name: "Time4VPS", price: "€2.50", term: "1 kk", desc: "Halpaa VPS-tilaa Euroopasta.", url: "https://time4vps.com", tiers: [{n:"Linux 2",p:"€2.50",s:"20 GB",w:"1 CPU"}, {n:"Linux 4",p:"€5.00",s:"40 GB",w:"2 CPU"}] },
-    { name: "MilesWeb", price: "€1.00", term: "36 kk", desc: "Intialainen jätti, erittäin halpa.", url: "https://milesweb.com", tiers: [{n:"Ignite",p:"€1.00",s:"50 GB",w:"1 Sivu"}, {n:"Elite",p:"€2.00",s:"150 GB",w:"Rajaton"}] }
+    // --- 48 KUUKAUTTA ---
+    { name: "Hostinger", price: "€2.99", term: "48 kk", desc: "Markkinoiden halvin 4v diili.", url: "https://hostinger.com", tiers: [{n:"Premium",p:"€2.99",s:"100 GB",w:"100 Sivua"}] }
 ];
 
-// --- LOGIIKKA (Ei muutoksia) ---
+// --- LOGIIKKA ---
 let currentData = [...hostsData];
 let sortAsc = true;
 const listBody = document.getElementById("mainTableBody");
 
 function renderTable() {
     listBody.innerHTML = "";
-    if(currentData.length === 0) { listBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px;">Ei tuloksia.</td></tr>`; return; }
+    if(currentData.length === 0) { listBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; font-size:1.1em; color:#666;">Ei tuloksia valituilla ehdoilla.</td></tr>`; return; }
     
     currentData.forEach((h, i) => {
         const originalIndex = hostsData.indexOf(h);
@@ -205,14 +198,31 @@ function renderTable() {
     });
 }
 
-function filterHosts() {
+function filterData() {
     const q = document.getElementById("searchInput").value.toLowerCase();
-    currentData = hostsData.filter(h => h.name.toLowerCase().includes(q) || h.desc.toLowerCase().includes(q) || h.price.includes(q));
-    renderTable();
+    const term = document.getElementById("termSelect").value;
+
+    currentData = hostsData.filter(h => {
+        const matchesSearch = h.name.toLowerCase().includes(q) || h.desc.toLowerCase().includes(q);
+        
+        let matchesTerm = true;
+        if (term === "1") matchesTerm = h.term === "1 kk";
+        else if (term === "12") matchesTerm = h.term === "12 kk";
+        else if (term === "24") matchesTerm = h.term === "24 kk";
+        else if (term === "36") matchesTerm = h.term === "36 kk";
+        else if (term === "48") matchesTerm = h.term === "48 kk";
+
+        return matchesSearch && matchesTerm;
+    });
+    
+    // Aina lajitellaan hinnan mukaan uudestaan
+    sortAsc = true; 
+    sortHosts('price');
 }
 
 function sortHosts(key) {
-    sortAsc = !sortAsc;
+    if(event && event.type === 'click') sortAsc = !sortAsc;
+
     currentData.sort((a,b) => {
         let A = a[key], B = b[key];
         if(key === 'price') {
@@ -233,13 +243,16 @@ function openModal(idx) {
     document.getElementById("modalVisitBtn").href = h.url;
     const tb = document.getElementById("tierTableBody");
     tb.innerHTML = "";
-    h.tiers.forEach(t => tb.innerHTML += `<tr><td style="font-weight:bold; color:#2980b9;">${t.n}</td><td style="color:green; font-weight:bold;">${t.p}</td><td>${t.s}</td><td>${t.w}</td></tr>`);
+    if(h.tiers) {
+        h.tiers.forEach(t => tb.innerHTML += `<tr><td style="font-weight:bold; color:#2980b9;">${t.n}</td><td style="color:green; font-weight:bold;">${t.p}</td><td>${t.s}</td><td>${t.w}</td></tr>`);
+    }
     modal.style.display = "block";
 }
 window.onclick = e => { if(e.target == modal) modal.style.display = "none"; }
 function closeModal() { modal.style.display = "none"; }
 
-renderTable();
+// Käynnistys
+sortHosts('price');
 </script>
 
 </body>
